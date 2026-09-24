@@ -1,0 +1,457 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  CLAIMS_OFFICER
+  CUSTOMER_SERVICE
+  CUSTOMER
+}
+
+enum EngagementLevel {
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum Channel {
+  DIGITAL
+  WHATSAPP
+  CALL_CENTRE
+  BRANCH
+}
+
+enum PolicyStatus {
+  ACTIVE
+  LAPSED
+  EXPIRED
+  PENDING
+}
+
+enum MembershipStatus {
+  ACTIVE
+  SUSPENDED
+  ENDED
+}
+
+enum ClaimType {
+  INSURANCE
+  MEDICAL
+}
+
+enum ClaimStatus {
+  SUBMITTED
+  DOCUMENTS_REQUIRED
+  UNDER_REVIEW
+  APPROVED
+  DECLINED
+  PAID
+}
+
+enum ReviewSignal {
+  NORMAL
+  REVIEW_REQUIRED
+  HIGH_PRIORITY
+}
+
+enum DocumentStatus {
+  RECEIVED
+  MISSING
+  PENDING
+}
+
+enum ProviderType {
+  HOSPITAL
+  CLINIC
+  PHARMACY
+  GARAGE
+  OTHER
+}
+
+enum SegmentKind {
+  PRODUCT
+  ENGAGEMENT
+  CHANNEL
+}
+
+enum InsightSeverity {
+  INFO
+  WARNING
+  POSITIVE
+}
+
+enum RecommendationStatus {
+  OPEN
+  COMPLETED
+}
+
+enum PaymentStanding {
+  CURRENT
+  OVERDUE
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  name         String
+  role         Role
+  customerId   String?  @unique @map("customer_id")
+  customer     Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  notifications Notification[]
+  auditLogs    AuditLog[]
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("users")
+}
+
+model Customer {
+  id                String          @id @default(uuid())
+  customerCode      String          @unique @map("customer_code")
+  firstName         String          @map("first_name")
+  lastName          String          @map("last_name")
+  email             String          @unique
+  phone             String
+  dateOfBirth       DateTime        @map("date_of_birth") @db.Date
+  location          String
+  customerSince     DateTime        @map("customer_since") @db.Date
+  engagement        EngagementLevel
+  preferredChannel  Channel         @map("preferred_channel")
+  lastInteractionAt DateTime?       @map("last_interaction_at")
+  createdAt         DateTime        @default(now()) @map("created_at")
+  updatedAt         DateTime        @updatedAt @map("updated_at")
+
+  user             User?
+  profile          CustomerProfile?
+  policies         InsurancePolicy[]
+  memberships      MedicalMembership[]
+  dependants       Dependant[]
+  claims           Claim[]
+  visits           HealthcareVisit[]
+  pharmacy         PharmacyTransaction[]
+  interactions     CustomerInteraction[]
+  events           CustomerEvent[]
+  segments         CustomerSegment[]
+  insights         CustomerInsight[]
+  recommendations  CustomerRecommendation[]
+  notifications    Notification[]
+  aiFeatures       AiFeature[]
+
+  @@index([lastName, firstName])
+  @@index([location])
+  @@map("customers")
+}
+
+model CustomerProfile {
+  id                       String          @id @default(uuid())
+  customerId               String          @unique @map("customer_id")
+  customer                 Customer        @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  productsHeld             String[]        @map("products_held")
+  policyCount              Int             @map("policy_count")
+  claimCount               Int             @map("claim_count")
+  claimFrequency           Decimal         @map("claim_frequency") @db.Decimal(6, 2)
+  averageClaimValue        Decimal         @map("average_claim_value") @db.Decimal(12, 2)
+  medicalClaimCount        Int             @map("medical_claim_count")
+  healthcareVisitCount     Int             @map("healthcare_visit_count")
+  pharmacyTransactionCount Int             @map("pharmacy_transaction_count")
+  digitalInteractionCount  Int             @map("digital_interaction_count")
+  supportInteractionCount  Int             @map("support_interaction_count")
+  paymentStanding          PaymentStanding @map("payment_standing")
+  nextRenewalDate          DateTime?       @map("next_renewal_date") @db.Date
+  createdAt                DateTime        @default(now()) @map("created_at")
+  updatedAt                DateTime        @updatedAt @map("updated_at")
+
+  @@map("customer_profiles")
+}
+
+model Provider {
+  id                String       @id @default(uuid())
+  name              String
+  type              ProviderType
+  location          String
+  averageClaimValue Decimal      @map("average_claim_value") @db.Decimal(12, 2)
+  claims            Claim[]
+  visits            HealthcareVisit[]
+  createdAt         DateTime     @default(now()) @map("created_at")
+  updatedAt         DateTime     @updatedAt @map("updated_at")
+
+  @@map("providers")
+}
+
+model InsurancePolicy {
+  id           String       @id @default(uuid())
+  customerId   String       @map("customer_id")
+  customer     Customer     @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  policyNumber String       @unique @map("policy_number")
+  productName  String       @map("product_name")
+  status       PolicyStatus
+  premium      Decimal      @db.Decimal(12, 2)
+  coverAmount  Decimal      @map("cover_amount") @db.Decimal(14, 2)
+  startDate    DateTime     @map("start_date") @db.Date
+  renewalDate  DateTime     @map("renewal_date") @db.Date
+  claims       Claim[]
+  createdAt    DateTime     @default(now()) @map("created_at")
+  updatedAt    DateTime     @updatedAt @map("updated_at")
+
+  @@index([customerId])
+  @@index([status])
+  @@map("insurance_policies")
+}
+
+model MedicalMembership {
+  id                  String           @id @default(uuid())
+  customerId          String           @map("customer_id")
+  customer            Customer         @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  memberNumber        String           @unique @map("member_number")
+  planName            String           @map("plan_name")
+  status              MembershipStatus
+  monthlyContribution Decimal          @map("monthly_contribution") @db.Decimal(12, 2)
+  startDate           DateTime         @map("start_date") @db.Date
+  dependants          Dependant[]
+  claims              Claim[]
+  createdAt           DateTime         @default(now()) @map("created_at")
+  updatedAt           DateTime         @updatedAt @map("updated_at")
+
+  @@index([customerId])
+  @@map("medical_memberships")
+}
+
+model Dependant {
+  id           String            @id @default(uuid())
+  customerId   String            @map("customer_id")
+  customer     Customer          @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  membershipId String            @map("membership_id")
+  membership   MedicalMembership @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+  firstName    String            @map("first_name")
+  lastName     String            @map("last_name")
+  relationship String
+  dateOfBirth  DateTime          @map("date_of_birth") @db.Date
+  createdAt    DateTime          @default(now()) @map("created_at")
+  updatedAt    DateTime          @updatedAt @map("updated_at")
+
+  @@index([customerId])
+  @@index([membershipId])
+  @@map("dependants")
+}
+
+model Claim {
+  id           String             @id @default(uuid())
+  customerId   String             @map("customer_id")
+  customer     Customer           @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  policyId     String?            @map("policy_id")
+  policy       InsurancePolicy?   @relation(fields: [policyId], references: [id], onDelete: SetNull)
+  membershipId String?            @map("membership_id")
+  membership   MedicalMembership? @relation(fields: [membershipId], references: [id], onDelete: SetNull)
+  providerId   String?            @map("provider_id")
+  provider     Provider?          @relation(fields: [providerId], references: [id], onDelete: SetNull)
+  claimNumber  String             @unique @map("claim_number")
+  type         ClaimType
+  status       ClaimStatus
+  amount       Decimal            @db.Decimal(12, 2)
+  description  String
+  incidentDate DateTime           @map("incident_date") @db.Date
+  submittedAt  DateTime           @map("submitted_at")
+  reviewSignal ReviewSignal       @default(NORMAL) @map("review_signal")
+  anomalyScore Int                @default(0) @map("anomaly_score")
+  documents    ClaimDocument[]
+  events       ClaimEvent[]
+  prediction   AiPrediction?
+  createdAt    DateTime           @default(now()) @map("created_at")
+  updatedAt    DateTime           @updatedAt @map("updated_at")
+
+  @@index([customerId])
+  @@index([status])
+  @@index([reviewSignal])
+  @@index([submittedAt])
+  @@map("claims")
+}
+
+model ClaimDocument {
+  id           String         @id @default(uuid())
+  claimId      String         @map("claim_id")
+  claim        Claim          @relation(fields: [claimId], references: [id], onDelete: Cascade)
+  fileName     String         @map("file_name")
+  documentType String         @map("document_type")
+  status       DocumentStatus
+  uploadedAt   DateTime?      @map("uploaded_at")
+  createdAt    DateTime       @default(now()) @map("created_at")
+  updatedAt    DateTime       @updatedAt @map("updated_at")
+
+  @@index([claimId])
+  @@map("claim_documents")
+}
+
+model ClaimEvent {
+  id          String   @id @default(uuid())
+  claimId     String   @map("claim_id")
+  claim       Claim    @relation(fields: [claimId], references: [id], onDelete: Cascade)
+  title       String
+  description String
+  occurredAt  DateTime @map("occurred_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@index([claimId])
+  @@map("claim_events")
+}
+
+model HealthcareVisit {
+  id           String    @id @default(uuid())
+  customerId   String    @map("customer_id")
+  customer     Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  providerId   String?   @map("provider_id")
+  provider     Provider? @relation(fields: [providerId], references: [id], onDelete: SetNull)
+  facilityName String    @map("facility_name")
+  visitType    String    @map("visit_type")
+  visitedAt    DateTime  @map("visited_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  @@index([customerId])
+  @@map("healthcare_visits")
+}
+
+model PharmacyTransaction {
+  id           String   @id @default(uuid())
+  customerId   String   @map("customer_id")
+  customer     Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  pharmacyName String   @map("pharmacy_name")
+  description  String
+  amount       Decimal  @db.Decimal(12, 2)
+  transactedAt DateTime @map("transacted_at")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@index([customerId])
+  @@map("pharmacy_transactions")
+}
+
+model CustomerInteraction {
+  id         String   @id @default(uuid())
+  customerId String   @map("customer_id")
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  channel    Channel
+  subject    String
+  summary    String
+  occurredAt DateTime @map("occurred_at")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@index([customerId])
+  @@map("customer_interactions")
+}
+
+model CustomerEvent {
+  id         String   @id @default(uuid())
+  customerId String   @map("customer_id")
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  title      String
+  category   String
+  occurredAt DateTime @map("occurred_at")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@index([customerId])
+  @@index([occurredAt])
+  @@map("customer_events")
+}
+
+model CustomerSegment {
+  id         String      @id @default(uuid())
+  customerId String      @map("customer_id")
+  customer   Customer    @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  kind       SegmentKind
+  label      String
+  createdAt  DateTime    @default(now()) @map("created_at")
+
+  @@unique([customerId, kind])
+  @@index([label])
+  @@map("customer_segments")
+}
+
+model CustomerInsight {
+  id         String          @id @default(uuid())
+  customerId String          @map("customer_id")
+  customer   Customer        @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  title      String
+  detail     String
+  severity   InsightSeverity
+  createdAt  DateTime        @default(now()) @map("created_at")
+
+  @@index([customerId])
+  @@index([createdAt])
+  @@map("customer_insights")
+}
+
+model CustomerRecommendation {
+  id         String               @id @default(uuid())
+  customerId String               @map("customer_id")
+  customer   Customer             @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  title      String
+  detail     String
+  action     String
+  status     RecommendationStatus @default(OPEN)
+  createdAt  DateTime             @default(now()) @map("created_at")
+  updatedAt  DateTime             @updatedAt @map("updated_at")
+
+  @@index([customerId])
+  @@index([status])
+  @@map("customer_recommendations")
+}
+
+model AiPrediction {
+  id           String       @id @default(uuid())
+  claimId      String       @unique @map("claim_id")
+  claim        Claim        @relation(fields: [claimId], references: [id], onDelete: Cascade)
+  score        Int
+  signal       ReviewSignal
+  factors      Json
+  modelVersion String       @map("model_version")
+  createdAt    DateTime     @default(now()) @map("created_at")
+
+  @@map("ai_predictions")
+}
+
+model AiFeature {
+  id         String   @id @default(uuid())
+  customerId String   @map("customer_id")
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  featureSet Json     @map("feature_set")
+  capturedAt DateTime @default(now()) @map("captured_at")
+
+  @@index([customerId])
+  @@map("ai_features")
+}
+
+model Notification {
+  id         String    @id @default(uuid())
+  userId     String?   @map("user_id")
+  user       User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  customerId String?   @map("customer_id")
+  customer   Customer? @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  title      String
+  body       String
+  read       Boolean   @default(false)
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@index([customerId])
+  @@map("notifications")
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  actorId   String?  @map("actor_id")
+  actor     User?    @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  action    String
+  entity    String
+  entityId  String?  @map("entity_id")
+  metadata  Json?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([entity, entityId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
