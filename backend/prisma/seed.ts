@@ -2,6 +2,7 @@ import 'dotenv/config'
 import bcrypt from 'bcryptjs'
 import { PrismaClient, type Channel, type EngagementLevel, type Prisma } from '@prisma/client'
 import { scoreClaim } from '../src/modules/claims/claims.service'
+import { scoreBook } from '../src/modules/intelligence/score'
 import { prisma as appPrisma } from '../src/lib/prisma'
 
 const prisma = new PrismaClient()
@@ -616,6 +617,8 @@ async function main() {
       metadata: { claimNumber: 'CLM-10924', customerCode: 'CUS-00182' },
     },
   })
+
+  await scoreBook()
 
   const [customers, claimCount, policies] = await Promise.all([
     prisma.customer.count(),

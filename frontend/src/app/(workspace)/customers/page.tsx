@@ -65,9 +65,9 @@ export default async function CustomersPage({
             {payload.data.map((customer) => {
               const product = customer.segments.find((segment) => segment.kind === "PRODUCT");
               return (
-                <TableRow key={customer.id}>
-                  <TableCell>
-                    <Link href={`/customers/${customer.id}`} className="font-medium underline-offset-4 hover:underline">
+                <TableRow key={customer.id} className="relative">
+                  <TableCell className="relative">
+                    <Link href={`/customers/${customer.id}`} className="font-medium after:absolute after:inset-0">
                       {customer.firstName} {customer.lastName}
                     </Link>
                   </TableCell>

@@ -7,10 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 const presets = [
-  { as: "claims", label: "Claims desk", email: "claims@cellgroup.demo" },
-  { as: "service", label: "Service desk", email: "service@cellgroup.demo" },
-  { as: "customer", label: "John Moyo", email: "john.moyo@cellgroup.demo" },
   { as: "admin", label: "Admin", email: "admin@cellgroup.demo" },
+  { as: "customer", label: "Customer", email: "john.moyo@cellgroup.demo" },
 ];
 
 export function LoginForm({ defaultEmail }: { defaultEmail: string }) {

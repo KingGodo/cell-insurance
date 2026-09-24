@@ -3,40 +3,41 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, FileSearch, LayoutDashboard, ShieldCheck, Star, UserRound } from "lucide-react";
 import { Wordmark } from "@/components/brand";
+import { ContactPanel } from "@/components/contact-panel";
 import { SiteHeader } from "@/components/site-header";
 
 const stats = [
-  { value: "3", label: "Cell businesses on one profile" },
-  { value: "360°", label: "View of the customer relationship" },
-  { value: "4", label: "Claim signals a person can read" },
-  { value: "2", label: "Doors: customer and Cell team" },
+  { value: "2", label: "Desks: admin and customer" },
+  { value: "Risk", label: "Who is about to leave, scored" },
+  { value: "Value", label: "Who is worth keeping" },
+  { value: "Save", label: "A retention before they go quiet" },
 ];
 
 const services = [
   {
-    title: "Customer 360",
-    body: "Policies, medical aid, dependants, visits, and support in one profile.",
-    href: "/login?as=claims",
+    title: "Risk and value",
+    body: "Gateway records are scored into how likely someone is to leave, and how much the relationship is worth.",
+    href: "/login?as=admin",
     tone: "solid" as const,
+    icon: LayoutDashboard,
+  },
+  {
+    title: "Segments",
+    body: "The book splits into leaving, watch, and steady, then again by value and by what they hold.",
+    href: "/login?as=admin",
+    tone: "light" as const,
     icon: UserRound,
   },
   {
-    title: "Claims intelligence",
-    body: "A claim is explained with amount, timing, frequency, and missing documents.",
-    href: "/login?as=claims",
+    title: "Retentions",
+    body: "A save is opened before a valuable customer goes quiet, with the reason and the channel to use.",
+    href: "/login?as=admin",
     tone: "light" as const,
     icon: FileSearch,
   },
   {
-    title: "Command centre",
-    body: "See what was submitted today and which claims still need a person.",
-    href: "/login",
-    tone: "light" as const,
-    icon: LayoutDashboard,
-  },
-  {
     title: "Customer access",
-    body: "Customers see their own cover, claims, and the document that was requested.",
+    body: "Customers see their own cover, claims, and messages. The risk score stays on the admin desk.",
     href: "/login?as=customer",
     tone: "light" as const,
     icon: ShieldCheck,
@@ -48,19 +49,19 @@ const stories = [
     title: "Motor renewal, already in view",
     body: "John Moyo’s motor policy renews on 15 Oct 2026. He is digitally engaged, so the next step is a renewal note, not a cold call.",
     tags: ["Renewal", "Digital", "Service"],
-    href: "/login?as=service",
+    href: "/login?as=admin",
   },
   {
     title: "A medical claim with reasons",
     body: "CLM-10924 is higher than the provider’s usual amount, follows a recent similar claim, and is missing the specialist report.",
     tags: ["Claims", "Explainable", "Review"],
-    href: "/login?as=claims",
+    href: "/login?as=admin",
   },
   {
     title: "Healthcare in the same timeline",
     body: "Nectacare visits and pharmacy activity sit beside insurance, so a service conversation starts with the whole relationship.",
     tags: ["Nectacare", "CellMed", "Journey"],
-    href: "/login?as=claims",
+    href: "/login?as=admin",
   },
   {
     title: "The customer sends the missing file",
@@ -105,10 +106,10 @@ export default function HomePage() {
               <ArrowRight aria-hidden="true" className="size-3.5" />
             </Link>
             <Link
-              href="/login?as=claims"
+              href="/login?as=admin"
               className="inline-flex h-9 items-center rounded-full border border-border bg-white px-3.5 text-sm font-semibold hover:bg-secondary"
             >
-              Open the claims desk
+              Open the admin desk
             </Link>
           </div>
         </section>
@@ -296,9 +297,30 @@ export default function HomePage() {
           </blockquote>
           <p className="mt-6 text-sm text-muted-foreground">CustomerIQ demo · claim CLM-10924 · John Moyo</p>
         </section>
+
+        <section id="contact" className="mx-auto grid max-w-6xl scroll-mt-24 items-start gap-10 px-8 py-16 md:grid-cols-[0.85fr_1.15fr] md:px-14 md:py-24">
+          <div>
+            <Pill>Contact</Pill>
+            <h2 className="mt-4 text-2xl font-semibold tracking-tight text-balance md:text-3xl">Write from Harare, or from wherever you are</h2>
+            <p className="mt-4 max-w-md text-sm leading-relaxed text-muted-foreground md:text-base">
+              Ask about the demo, a walkthrough of a customer profile, or how a claim is explained before a person decides.
+            </p>
+            <dl className="mt-6 space-y-3 text-sm">
+              <div>
+                <dt className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Place</dt>
+                <dd className="mt-1 font-medium">Harare</dd>
+              </div>
+              <div>
+                <dt className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Desk</dt>
+                <dd className="mt-1 font-medium">Customer and team access from the sign-in page</dd>
+              </div>
+            </dl>
+          </div>
+          <ContactPanel />
+        </section>
       </main>
 
-      <footer id="contact" className="scroll-mt-24 bg-foreground text-background">
+      <footer className="bg-foreground text-background">
         <div className="mx-auto grid max-w-6xl gap-10 px-8 md:px-14 py-12 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr]">
           <div>
             <Wordmark light />
@@ -320,7 +342,7 @@ export default function HomePage() {
             <ul className="mt-4 space-y-2.5 text-sm">
               <li><Link href="/login" className="text-background/80 hover:text-background">Sign in</Link></li>
               <li><Link href="/login?as=customer" className="text-background/80 hover:text-background">Customer access</Link></li>
-              <li><Link href="/login?as=claims" className="text-background/80 hover:text-background">Claims desk</Link></li>
+              <li><Link href="/login?as=admin" className="text-background/80 hover:text-background">Admin desk</Link></li>
               <li><a href="#contact" className="text-background/80 hover:text-background">Contact</a></li>
             </ul>
           </div>

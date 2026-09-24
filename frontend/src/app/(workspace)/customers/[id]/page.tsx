@@ -9,7 +9,7 @@ export default async function CustomerProfilePage({ params }: { params: Promise<
       api<{ data: CustomerRecordData }>(`/customers/${id}/profile`),
       api<{ data: JourneyEvent[] }>(`/customers/${id}/journey`),
     ]);
-    return <CustomerRecord data={profile.data} journey={journey.data} />;
+    return <CustomerRecord data={profile.data} journey={journey.data} showScores />;
   } catch (error) {
     return <Offline error={error} />;
   }

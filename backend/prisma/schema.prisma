@@ -78,6 +78,25 @@ enum SegmentKind {
   PRODUCT
   ENGAGEMENT
   CHANNEL
+  RISK
+  VALUE
+}
+
+enum RiskBand {
+  STEADY
+  WATCH
+  LEAVING
+}
+
+enum ValueBand {
+  LOWER
+  CORE
+  HIGH
+}
+
+enum RetentionStatus {
+  OPEN
+  KEPT
 }
 
 enum InsightSeverity {
@@ -141,6 +160,7 @@ model Customer {
   segments         CustomerSegment[]
   insights         CustomerInsight[]
   recommendations  CustomerRecommendation[]
+  retentions       Retention[]
   notifications    Notification[]
   aiFeatures       AiFeature[]
 
@@ -165,6 +185,11 @@ model CustomerProfile {
   supportInteractionCount  Int             @map("support_interaction_count")
   paymentStanding          PaymentStanding @map("payment_standing")
   nextRenewalDate          DateTime?       @map("next_renewal_date") @db.Date
+  riskScore                Int             @default(0) @map("risk_score")
+  valueScore               Int             @default(0) @map("value_score")
+  riskBand                 RiskBand        @default(STEADY) @map("risk_band")
+  valueBand                ValueBand       @default(CORE) @map("value_band")
+  scoredAt                 DateTime?       @map("scored_at")
   createdAt                DateTime        @default(now()) @map("created_at")
   updatedAt                DateTime        @updatedAt @map("updated_at")
 
@@ -369,6 +394,22 @@ model CustomerSegment {
   @@unique([customerId, kind])
   @@index([label])
   @@map("customer_segments")
+}
+
+model Retention {
+  id         String           @id @default(uuid())
+  customerId String           @map("customer_id")
+  customer   Customer         @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  title      String
+  reason     String
+  action     String
+  status     RetentionStatus  @default(OPEN)
+  createdAt  DateTime         @default(now()) @map("created_at")
+  updatedAt  DateTime         @updatedAt @map("updated_at")
+
+  @@index([customerId])
+  @@index([status])
+  @@map("retentions")
 }
 
 model CustomerInsight {

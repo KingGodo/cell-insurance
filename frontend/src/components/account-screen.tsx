@@ -27,7 +27,7 @@ export async function AccountScreen({ focus }: { focus?: string }) {
           <h1 className="text-xl font-semibold tracking-tight">Team account</h1>
           <p className="mt-2 text-sm text-muted-foreground">This sign-in is for the team. Open the command centre to work the book.</p>
           <Link href="/dashboard" className="mt-4 inline-flex h-9 items-center rounded-full bg-primary px-3.5 text-sm font-semibold text-primary-foreground">
-            Command centre
+            Admin desk
           </Link>
         </section>
       );

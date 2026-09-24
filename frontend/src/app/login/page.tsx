@@ -4,8 +4,6 @@ import { Wordmark } from "@/components/brand";
 import { LoginForm } from "@/app/login/login-form";
 
 const emails: Record<string, string> = {
-  claims: "claims@cellgroup.demo",
-  service: "service@cellgroup.demo",
   customer: "john.moyo@cellgroup.demo",
   admin: "admin@cellgroup.demo",
 };
@@ -16,7 +14,7 @@ export default async function LoginPage({
   searchParams: Promise<{ as?: string }>;
 }) {
   const { as } = await searchParams;
-  const defaultEmail = emails[as ?? "claims"] ?? emails.claims;
+  const defaultEmail = emails[as ?? "admin"] ?? emails.admin;
 
   return (
     <main className="grid min-h-screen md:grid-cols-2">

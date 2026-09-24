@@ -40,8 +40,13 @@ export type CustomerRecordData = {
     supportInteractionCount: number;
     paymentStanding: string;
     nextRenewalDate: string | null;
+    riskScore?: number;
+    valueScore?: number;
+    riskBand?: string;
+    valueBand?: string;
   } | null;
   segments: Array<{ kind: string; label: string }>;
+  retentions?: Array<{ title: string; reason: string; action: string }>;
   policies: Array<{
     id: string;
     policyNumber: string;
@@ -113,16 +118,20 @@ export function CustomerRecord({
   data,
   journey,
   showMessages = false,
+  showScores = false,
   sectionLinks,
 }: {
   data: CustomerRecordData;
   journey: JourneyEvent[];
   showMessages?: boolean;
+  showScores?: boolean;
   sectionLinks?: Array<{ href: string; label: string }>;
 }) {
   const record = data.profile;
   const customer = data.customer;
   const links = sectionLinks ?? (showMessages ? [...sections, { href: "#messages", label: "Messages" }] : sections);
+  const visibleSegments = showScores ? data.segments : data.segments.filter((item) => item.kind !== "RISK" && item.kind !== "VALUE");
+  const retention = data.retentions?.[0];
 
   return (
     <div className="space-y-4">
@@ -135,13 +144,32 @@ export function CustomerRecord({
           </p>
         </div>
         <div className="flex flex-wrap gap-1.5">
-          {data.segments.map((segment) => (
+          {visibleSegments.map((segment) => (
             <span key={segment.kind} className="rounded-full bg-secondary px-2.5 py-1 text-xs text-muted-foreground">
               {segment.label}
             </span>
           ))}
         </div>
       </header>
+
+      {showScores && record?.riskBand ? (
+        <section className="grid gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-3">
+          <article className="bg-card px-4 py-3">
+            <p className="text-xs text-muted-foreground">Risk of leaving</p>
+            <p className="mt-1 text-sm font-semibold">{labelize(record.riskBand)} · {record.riskScore}</p>
+          </article>
+          <article className="bg-card px-4 py-3">
+            <p className="text-xs text-muted-foreground">Value</p>
+            <p className="mt-1 text-sm font-semibold">{record.valueBand ? labelize(record.valueBand) : "—"} · {record.valueScore}</p>
+          </article>
+          <article className="bg-card px-4 py-3">
+            <p className="text-xs text-muted-foreground">Retention plan</p>
+            <p className="mt-1 text-sm font-semibold">{retention?.title ?? "None open"}</p>
+            {retention ? <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{retention.reason}</p> : null}
+            {retention ? <p className="mt-1 text-xs leading-relaxed">{retention.action}</p> : null}
+          </article>
+        </section>
+      ) : null}
 
       <nav className="flex flex-wrap gap-1" aria-label="Profile sections">
         {links.map((section) => (
@@ -162,6 +190,14 @@ export function CustomerRecord({
             ["Products", record?.productsHeld.join(", ") || "—"],
             ["Claim frequency", record ? String(record.claimFrequency) : "—"],
             ["Average claim", record ? money(record.averageClaimValue) : "—"],
+            ["Policies", record ? String(record.policyCount) : "—"],
+            ["Claims", record ? String(record.claimCount) : "—"],
+            ["Medical claims", record ? String(record.medicalClaimCount) : "—"],
+            ["Visits", record ? String(record.healthcareVisitCount) : "—"],
+            ["Pharmacy", record ? String(record.pharmacyTransactionCount) : "—"],
+            ["Digital contacts", record ? String(record.digitalInteractionCount) : "—"],
+            ["Support contacts", record ? String(record.supportInteractionCount) : "—"],
+            ["Renewal", record ? when(record.nextRenewalDate) : "—"],
           ].map(([label, value]) => (
             <div key={label} className="bg-card px-4 py-3">
               <dt className="text-xs text-muted-foreground">{label}</dt>

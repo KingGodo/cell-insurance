@@ -21,6 +21,7 @@ const customerInclude = {
   memberships: { include: { dependants: true } },
   insights: { orderBy: { createdAt: 'desc' as const } },
   recommendations: { orderBy: { createdAt: 'desc' as const } },
+  retentions: { where: { status: 'OPEN' as const }, orderBy: { createdAt: 'desc' as const }, take: 1 },
 } satisfies Prisma.CustomerInclude
 
 export const customersRouter = Router()
@@ -123,16 +124,16 @@ customersRouter.get(
         ...customerInclude,
         claims: {
           orderBy: { submittedAt: 'desc' },
-          take: 12,
+          take: 50,
           include: { provider: { select: { name: true } }, documents: true },
         },
         visits: {
           orderBy: { visitedAt: 'desc' },
-          take: 12,
+          take: 50,
           include: { provider: { select: { name: true } } },
         },
-        pharmacy: { orderBy: { transactedAt: 'desc' }, take: 12 },
-        interactions: { orderBy: { occurredAt: 'desc' }, take: 12 },
+        pharmacy: { orderBy: { transactedAt: 'desc' }, take: 50 },
+        interactions: { orderBy: { occurredAt: 'desc' }, take: 50 },
       },
     })
     if (!customer) throw notFound('Customer')
@@ -157,6 +158,7 @@ customersRouter.get(
         memberships: customer.memberships,
         insights: customer.insights,
         recommendations: customer.recommendations,
+        retentions: customer.retentions,
         recentClaims: customer.claims,
         recentVisits: customer.visits,
         recentPharmacy: customer.pharmacy,

@@ -24,15 +24,11 @@ export function labelize(value: string) {
 }
 
 export function roleLabel(role: string) {
-  if (role === "CLAIMS_OFFICER") return "Claims officer";
-  if (role === "CUSTOMER_SERVICE") return "Customer service";
-  if (role === "ADMIN") return "Admin";
-  return "Customer";
+  if (role === "CUSTOMER") return "Customer";
+  return "Admin";
 }
 
 export function roleDetail(role: string) {
-  if (role === "CLAIMS_OFFICER") return "Claims desk";
-  if (role === "CUSTOMER_SERVICE") return "Service desk";
-  if (role === "ADMIN") return "Full access";
-  return "Own record only";
+  if (role === "CUSTOMER") return "Own record only";
+  return "Risk, value, and retentions";
 }

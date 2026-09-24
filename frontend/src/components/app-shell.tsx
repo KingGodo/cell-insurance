@@ -4,15 +4,17 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { FileSearch, HeartPulse, LayoutDashboard, LogOut, Menu, MessageSquare, Shield, Stethoscope, UserRound, Users, X } from "lucide-react";
+import { Bookmark, FileSearch, HeartPulse, LayoutDashboard, LogOut, Menu, MessageSquare, Shield, Stethoscope, Tags, UserRound, Users, X } from "lucide-react";
 import { logout } from "@/lib/actions";
 import { roleDetail, roleLabel } from "@/lib/format";
 import { Wordmark } from "@/components/brand";
 
 const staffLinks = [
-  { href: "/dashboard", label: "Command centre", detail: "What needs a person today", icon: LayoutDashboard },
+  { href: "/dashboard", label: "Book", detail: "Risk and value across the book", icon: LayoutDashboard },
+  { href: "/dashboard/profiles", label: "Profiles", detail: "Every customer record", icon: UserRound },
+  { href: "/dashboard/segments", label: "Segments", detail: "Risk, value, product, channel", icon: Tags },
+  { href: "/dashboard/retentions", label: "Retentions", detail: "Plans to keep them", icon: Bookmark },
   { href: "/customers", label: "Customers", detail: "Search the relationship", icon: Users },
-  { href: "/claims", label: "Claims", detail: "Signals, status, and documents", icon: FileSearch },
 ];
 
 const customerLinks = [
@@ -25,7 +27,7 @@ const customerLinks = [
 ];
 
 function isCurrent(pathname: string, href: string) {
-  if (href === "/account") return pathname === "/account";
+  if (href === "/account" || href === "/dashboard") return pathname === href;
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
