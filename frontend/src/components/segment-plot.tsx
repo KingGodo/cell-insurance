@@ -11,7 +11,7 @@ export type PlotPoint = {
   slug: MatrixSlug;
 };
 
-const width = 840;
+const width = 1280;
 const height = 520;
 const left = 58;
 const right = 28;
@@ -77,7 +77,7 @@ export function SegmentPlot({ points }: { points: PlotPoint[] }) {
           ))}
         </ul>
       </div>
-      <div className="relative w-full max-w-2xl">
+      <div className="relative w-full">
         <svg viewBox={`0 0 ${width} ${height}`} className="h-auto w-full" role="img" aria-label="Scatter of customers by value and risk.">
           <defs>
             <filter id="point-shadow" x="-50%" y="-50%" width="200%" height="200%">
