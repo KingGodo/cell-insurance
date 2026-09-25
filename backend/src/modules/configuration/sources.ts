@@ -1,0 +1,227 @@
+export type FeedKey = {
+  name: string
+  required: boolean
+  note: string
+}
+
+export type Feed = {
+  code: string
+  name: string
+  kind: 'GATEWAY' | 'API'
+  origin: string
+  records: string[]
+  storedIn: string[]
+  usedFor: string[]
+  columns: string[]
+  method: 'POST'
+  path: string
+  headers: string[]
+  keys: FeedKey[]
+  example: Record<string, unknown>
+}
+
+export const feeds: Feed[] = [
+  {
+    code: 'identity',
+    name: 'Customer master',
+    kind: 'API',
+    origin: 'The shared customer record across Cell Insurance, CellMed, and Nectacare',
+    records: ['Name', 'Customer code', 'Email', 'Phone', 'Location', 'Customer since'],
+    storedIn: ['Customer'],
+    usedFor: ['The profile the admin opens', 'Tenure in the value score'],
+    columns: ['customerCode', 'firstName', 'lastName', 'email', 'phone', 'dateOfBirth', 'location', 'customerSince', 'engagement', 'preferredChannel'],
+    method: 'POST',
+    path: '/api/v1/configuration/feeds/identity',
+    headers: ['Authorization: Bearer <token>', 'Content-Type: application/json'],
+    keys: [
+      { name: 'customerCode', required: true, note: 'Unique code, such as CUS-20001' },
+      { name: 'firstName', required: true, note: 'Given name' },
+      { name: 'lastName', required: true, note: 'Family name' },
+      { name: 'email', required: true, note: 'Unique email address' },
+      { name: 'phone', required: true, note: 'Include the country code' },
+      { name: 'dateOfBirth', required: true, note: 'YYYY-MM-DD' },
+      { name: 'location', required: true, note: 'Town or city' },
+      { name: 'customerSince', required: true, note: 'YYYY-MM-DD' },
+      { name: 'engagement', required: false, note: 'HIGH, MEDIUM, or LOW. Defaults to MEDIUM' },
+      { name: 'preferredChannel', required: false, note: 'DIGITAL, WHATSAPP, CALL_CENTRE, or BRANCH. Defaults to DIGITAL' },
+      { name: 'employer', required: false, note: 'Employer name when the premium is deducted at work. Omit when self-employed or abroad' },
+      { name: 'affinityGroup', required: false, note: 'Corporate scheme that links the customer to a group, such as Econet Staff Scheme' },
+    ],
+    example: {
+      customerCode: 'CUS-20001',
+      firstName: 'Rudo',
+      lastName: 'Moyo',
+      email: 'rudo.moyo@cellgroup.demo',
+      phone: '+263 77 555 0101',
+      dateOfBirth: '1990-04-12',
+      location: 'Harare',
+      customerSince: '2024-01-15',
+      engagement: 'MEDIUM',
+      preferredChannel: 'WHATSAPP',
+      employer: 'Econet',
+      affinityGroup: 'Econet Staff Scheme',
+    },
+  },
+  {
+    code: 'insurance',
+    name: 'Insurance gateway',
+    kind: 'GATEWAY',
+    origin: 'Cell Insurance policy and claims administration',
+    records: ['Policies', 'Previous premium', 'Renewal premium', 'Insurance claims and their dates'],
+    storedIn: ['Insurance policy', 'Claim'],
+    usedFor: ['Claims experience and the claim-to-premium ratio', 'Renewal premium shock', 'Multi-line density and annualized premium', 'Policy tenure from the start date'],
+    columns: ['customerCode', 'policyNumber', 'productName', 'premium', 'coverAmount', 'renewalDate'],
+    method: 'POST',
+    path: '/api/v1/configuration/feeds/insurance',
+    headers: ['Authorization: Bearer <token>', 'Content-Type: application/json'],
+    keys: [
+      { name: 'customerCode', required: true, note: 'Customer already on the book' },
+      { name: 'policyNumber', required: true, note: 'Unique policy number' },
+      { name: 'productName', required: true, note: 'Such as Motor Comprehensive' },
+      { name: 'status', required: false, note: 'ACTIVE, LAPSED, EXPIRED, or PENDING. Defaults to ACTIVE' },
+      { name: 'premium', required: true, note: 'Current monthly premium as a number' },
+      { name: 'previousPremium', required: true, note: 'Premium before this renewal. Shock is (renewalPremium - previousPremium) / previousPremium' },
+      { name: 'renewalPremium', required: true, note: 'Premium quoted for the coming term' },
+      { name: 'coverAmount', required: true, note: 'Cover amount as a number' },
+      { name: 'startDate', required: true, note: 'YYYY-MM-DD' },
+      { name: 'renewalDate', required: true, note: 'YYYY-MM-DD' },
+    ],
+    example: {
+      customerCode: 'CUS-00182',
+      policyNumber: 'POL-20001',
+      productName: 'Motor Comprehensive',
+      status: 'ACTIVE',
+      premium: 86,
+      previousPremium: 64,
+      renewalPremium: 86,
+      coverAmount: 12000,
+      startDate: '2025-03-01',
+      renewalDate: '2026-10-15',
+    },
+  },
+  {
+    code: 'medical',
+    name: 'Medical aid gateway',
+    kind: 'GATEWAY',
+    origin: 'CellMed membership administration',
+    records: ['Plan', 'Monthly contribution', 'Dependants', 'Medical claims'],
+    storedIn: ['Medical membership', 'Dependant', 'Claim'],
+    usedFor: ['Value from the contribution', 'The medical part of the profile'],
+    columns: ['customerCode', 'memberNumber', 'planName', 'monthlyContribution'],
+    method: 'POST',
+    path: '/api/v1/configuration/feeds/medical',
+    headers: ['Authorization: Bearer <token>', 'Content-Type: application/json'],
+    keys: [
+      { name: 'customerCode', required: true, note: 'Customer already on the book' },
+      { name: 'memberNumber', required: true, note: 'Unique membership number' },
+      { name: 'planName', required: true, note: 'Essential, Standard, or Premium' },
+      { name: 'status', required: false, note: 'ACTIVE, SUSPENDED, or ENDED. Defaults to ACTIVE' },
+      { name: 'monthlyContribution', required: true, note: 'Monthly amount as a number' },
+      { name: 'startDate', required: true, note: 'YYYY-MM-DD' },
+    ],
+    example: {
+      customerCode: 'CUS-00182',
+      memberNumber: 'MED-20001',
+      planName: 'Standard',
+      status: 'ACTIVE',
+      monthlyContribution: 70,
+      startDate: '2024-02-01',
+    },
+  },
+  {
+    code: 'care',
+    name: 'Healthcare gateway',
+    kind: 'GATEWAY',
+    origin: 'Nectacare facilities and pharmacies',
+    records: ['Visits', 'Facility', 'Visit type', 'Pharmacy transactions'],
+    storedIn: ['Healthcare visit', 'Pharmacy transaction'],
+    usedFor: ['The care section of the profile', 'Products held when healthcare is on the book'],
+    columns: ['customerCode', 'facilityName', 'visitType', 'visitedAt'],
+    method: 'POST',
+    path: '/api/v1/configuration/feeds/care',
+    headers: ['Authorization: Bearer <token>', 'Content-Type: application/json'],
+    keys: [
+      { name: 'customerCode', required: true, note: 'Customer already on the book' },
+      { name: 'facilityName', required: true, note: 'Clinic or hospital' },
+      { name: 'visitType', required: true, note: 'Such as General consultation' },
+      { name: 'visitedAt', required: true, note: 'ISO date-time' },
+      { name: 'pharmacyName', required: false, note: 'Include when a pharmacy line is part of the visit' },
+      { name: 'description', required: false, note: 'What was dispensed' },
+      { name: 'amount', required: false, note: 'Pharmacy amount as a number' },
+    ],
+    example: {
+      customerCode: 'CUS-00182',
+      facilityName: 'Nectacare Avondale',
+      visitType: 'General consultation',
+      visitedAt: '2026-03-18T10:00:00.000Z',
+      pharmacyName: 'Avondale Pharmacy',
+      description: 'Repeat prescription',
+      amount: 18,
+    },
+  },
+  {
+    code: 'engagement',
+    name: 'Engagement API',
+    kind: 'API',
+    origin: 'Portal, WhatsApp, call centre, and branch contact logs',
+    records: ['Contact channel', 'What was said', 'Sentiment'],
+    storedIn: ['Customer interaction'],
+    usedFor: ['Claim and contact sentiment in the risk model'],
+    columns: ['customerCode', 'channel', 'subject', 'occurredAt'],
+    method: 'POST',
+    path: '/api/v1/configuration/feeds/engagement',
+    headers: ['Authorization: Bearer <token>', 'Content-Type: application/json'],
+    keys: [
+      { name: 'customerCode', required: true, note: 'Customer already on the book' },
+      { name: 'channel', required: true, note: 'DIGITAL, WHATSAPP, CALL_CENTRE, or BRANCH' },
+      { name: 'subject', required: true, note: 'Short subject of the contact' },
+      { name: 'summary', required: true, note: 'What was said' },
+      { name: 'occurredAt', required: true, note: 'ISO date-time' },
+      { name: 'sentiment', required: true, note: 'POSITIVE, NEUTRAL, or NEGATIVE. Averaged into the sentiment feature' },
+    ],
+    example: {
+      customerCode: 'CUS-00182',
+      channel: 'WHATSAPP',
+      subject: 'Renewal question',
+      summary: 'Unhappy that the renewal premium jumped.',
+      sentiment: 'NEGATIVE',
+      occurredAt: '2026-09-12T10:00:00.000Z',
+    },
+  },
+  {
+    code: 'payments',
+    name: 'Payments API',
+    kind: 'API',
+    origin: 'Premium and contribution billing',
+    records: ['Each premium due date, paid date, channel, and where it was paid from'],
+    storedIn: ['Premium payment'],
+    usedFor: ['Payment lateness', 'Payment jitter', 'Diaspora status', 'Dominant payment channel'],
+    columns: ['customerCode', 'dueDate', 'paidAt', 'amount', 'channel', 'payerCountry', 'payerCity'],
+    method: 'POST',
+    path: '/api/v1/configuration/feeds/payments',
+    headers: ['Authorization: Bearer <token>', 'Content-Type: application/json'],
+    keys: [
+      { name: 'customerCode', required: true, note: 'Customer already on the book' },
+      { name: 'payments', required: true, note: 'List of premium payments. Lateness is paidAt minus dueDate. Jitter is how much that gap varies' },
+      { name: 'payments.dueDate', required: true, note: 'YYYY-MM-DD' },
+      { name: 'payments.paidAt', required: true, note: 'ISO date-time when the money arrived' },
+      { name: 'payments.amount', required: true, note: 'Amount received' },
+      { name: 'payments.channel', required: true, note: 'BANK, MOBILE_MONEY, EMPLOYER_DEDUCTION, DIASPORA_TRANSFER, or CASH' },
+      { name: 'payments.payerCountry', required: true, note: 'ISO country. Anything other than ZW counts toward diaspora status' },
+      { name: 'payments.payerCity', required: true, note: 'City the payment was sent from' },
+    ],
+    example: {
+      customerCode: 'CUS-00182',
+      payments: [
+        {
+          dueDate: '2026-08-01',
+          paidAt: '2026-08-17T09:00:00.000Z',
+          amount: 86,
+          channel: 'DIASPORA_TRANSFER',
+          payerCountry: 'ZA',
+          payerCity: 'Johannesburg',
+        },
+      ],
+    },
+  },
+]

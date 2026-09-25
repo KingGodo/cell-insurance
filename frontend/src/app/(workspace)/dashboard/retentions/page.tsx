@@ -1,5 +1,5 @@
-import { AdminBook } from "@/components/admin-book";
+import { redirect } from "next/navigation";
 
-export default function RetentionsPage() {
-  return <AdminBook section="retentions" />;
+export default function RetentionsRedirect() {
+  redirect("/dashboard/retention/deployed");
 }

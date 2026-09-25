@@ -15,6 +15,19 @@ export function when(value: string | null | undefined) {
   }).format(new Date(value));
 }
 
+export function riskTerm(band: string) {
+  if (band === "LEAVING") return "High risk";
+  if (band === "WATCH") return "Medium risk";
+  return "Low risk";
+}
+
+export function valueTerm(band: string) {
+  if (band === "HIGH") return "High value";
+  if (band === "CORE") return "Medium value";
+  if (band === "LOWER") return "Low value";
+  return band;
+}
+
 export function labelize(value: string) {
   return value
     .toLowerCase()

@@ -4,18 +4,51 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { Bookmark, FileSearch, HeartPulse, LayoutDashboard, LogOut, Menu, MessageSquare, Shield, Stethoscope, Tags, UserRound, Users, X } from "lucide-react";
+import { BarChart3, Bookmark, ClipboardList, FileSearch, HeartPulse, LayoutDashboard, LogOut, Menu, MessageSquare, Settings, Shield, SlidersHorizontal, Sparkles, Stethoscope, Tags, UserRound, Users, Workflow, X, type LucideIcon } from "lucide-react";
 import { logout } from "@/lib/actions";
 import { roleDetail, roleLabel } from "@/lib/format";
 import { Wordmark } from "@/components/brand";
 
-const staffLinks = [
-  { href: "/dashboard", label: "Book", detail: "Risk and value across the book", icon: LayoutDashboard },
-  { href: "/dashboard/profiles", label: "Profiles", detail: "Every customer record", icon: UserRound },
-  { href: "/dashboard/segments", label: "Segments", detail: "Risk, value, product, channel", icon: Tags },
-  { href: "/dashboard/retentions", label: "Retentions", detail: "Plans to keep them", icon: Bookmark },
-  { href: "/customers", label: "Customers", detail: "Search the relationship", icon: Users },
+type NavLink = { href: string; label: string; detail: string; icon: LucideIcon };
+
+const staffSections: Array<{ heading: string; links: NavLink[] }> = [
+  {
+    heading: "AI",
+    links: [
+      { href: "/dashboard", label: "Overview", detail: "Both models across the book", icon: LayoutDashboard },
+      { href: "/dashboard/ai/value", label: "Value", detail: "What the value model found", icon: Sparkles },
+      { href: "/dashboard/ai/risk", label: "Risk", detail: "Risk outcomes and drivers", icon: Shield },
+    ],
+  },
+  {
+    heading: "Customers",
+    links: [
+      { href: "/dashboard/customers", label: "Overview", detail: "A graphical view of the book", icon: LayoutDashboard },
+      { href: "/customers", label: "Customers", detail: "Search the relationship", icon: Users },
+      { href: "/dashboard/profiles", label: "Profiles", detail: "Full record and history", icon: UserRound },
+      { href: "/dashboard/segments", label: "Segments", detail: "Value against risk", icon: Tags },
+    ],
+  },
+  {
+    heading: "Configuration",
+    links: [
+      { href: "/dashboard/configuration/apis", label: "APIs", detail: "Where each feed comes from", icon: Settings },
+      { href: "/dashboard/configuration/csv", label: "CSV", detail: "Receive a customer file", icon: FileSearch },
+      { href: "/dashboard/configuration/ingestion", label: "Ingestion", detail: "How the feeds are performing", icon: Workflow },
+    ],
+  },
+  {
+    heading: "Retention",
+    links: [
+      { href: "/dashboard/retention/strategies", label: "Strategies", detail: "How each plan evaluates before it goes out", icon: BarChart3 },
+      { href: "/dashboard/retention/rules", label: "Rules", detail: "Value and risk thresholds a plan must have", icon: SlidersHorizontal },
+      { href: "/dashboard/retention/plans", label: "Plans", detail: "Add, edit, deactivate, or remove an offer", icon: Bookmark },
+      { href: "/dashboard/retention/deployed", label: "Deployed", detail: "Report of who received a plan", icon: ClipboardList },
+    ],
+  },
 ];
+
+const staffLinks = staffSections.flatMap((section) => section.links);
 
 const customerLinks = [
   { href: "/account", label: "Profile", detail: "Who you are on the book", icon: UserRound },
@@ -27,7 +60,8 @@ const customerLinks = [
 ];
 
 function isCurrent(pathname: string, href: string) {
-  if (href === "/account" || href === "/dashboard") return pathname === href;
+  if (href === "/account" || href === "/dashboard" || href === "/customers") return pathname === href;
+  if (href === "/dashboard/profiles") return pathname === href || /^\/customers\/[^/]+$/.test(pathname);
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
@@ -70,26 +104,17 @@ export function AppShell({
             <Wordmark light />
           </Link>
         </div>
-        <nav className="flex flex-1 flex-col gap-0.5 px-3" aria-label="Workspace">
-          {links.map((link) => {
-            const active = isCurrent(pathname, link.href);
-            const Icon = link.icon;
-            return (
-              <Link
-                key={link.href}
-                href={link.href}
-                aria-current={active ? "page" : undefined}
-                className={`flex h-9 items-center gap-2.5 rounded-lg px-2.5 text-sm transition-colors ${
-                  active
-                    ? "bg-sidebar-accent font-medium text-sidebar-foreground"
-                    : "text-sidebar-foreground/65 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground"
-                }`}
-              >
-                <Icon aria-hidden="true" className={`size-4 shrink-0 ${active ? "text-primary" : "text-sidebar-foreground/55"}`} />
-                {link.label}
-              </Link>
-            );
-          })}
+        <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto px-3 pb-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden" aria-label="Workspace">
+          {role === "CUSTOMER"
+            ? links.map((link) => <NavItem key={link.href} link={link} active={isCurrent(pathname, link.href)} />)
+            : staffSections.map((section, index) => (
+                <div key={section.heading} className={index === 0 ? "pt-1" : "pt-4"}>
+                  <p className="px-2.5 pb-1 text-[11px] font-semibold tracking-wide text-primary uppercase">{section.heading}</p>
+                  {section.links.map((link) => (
+                    <NavItem key={link.href} link={link} active={isCurrent(pathname, link.href)} />
+                  ))}
+                </div>
+              ))}
         </nav>
         <div className="flex items-center gap-2.5 border-t border-sidebar-border px-3 py-3">
           <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-[11px] font-semibold text-primary-foreground">
@@ -145,21 +170,16 @@ export function AppShell({
         {open ? (
           <div id="mobile-nav" className="border-b border-border bg-background px-8 py-3 md:hidden">
             <nav className="flex flex-col gap-1" aria-label="Workspace">
-              {links.map((link) => {
-                const active = isCurrent(pathname, link.href);
-                return (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    aria-current={active ? "page" : undefined}
-                    className={`rounded-xl px-3 py-2 ${active ? "bg-foreground text-background" : ""}`}
-                    onClick={() => setOpen(false)}
-                  >
-                    <span className="block text-sm font-medium">{link.label}</span>
-                    <span className={`block text-xs ${active ? "text-background/70" : "text-muted-foreground"}`}>{link.detail}</span>
-                  </Link>
-                );
-              })}
+              {role === "CUSTOMER"
+                ? links.map((link) => <MobileItem key={link.href} link={link} active={isCurrent(pathname, link.href)} onNavigate={() => setOpen(false)} />)
+                : staffSections.map((section) => (
+                    <div key={section.heading} className="pt-2">
+                      <p className="px-3 pb-1 text-[11px] font-semibold tracking-wide text-foreground/70 uppercase">{section.heading}</p>
+                      {section.links.map((link) => (
+                        <MobileItem key={link.href} link={link} active={isCurrent(pathname, link.href)} onNavigate={() => setOpen(false)} />
+                      ))}
+                    </div>
+                  ))}
             </nav>
             <div className="mt-3 border-t border-border pt-3 text-xs text-muted-foreground">
               <p className="font-medium text-foreground">{name}</p>
@@ -185,5 +205,30 @@ export function AppShell({
         <main className="px-6 py-6 md:px-8 md:py-7">{children}</main>
       </div>
     </div>
+  );
+}
+
+function NavItem({ link, active }: { link: NavLink; active: boolean }) {
+  const Icon = link.icon;
+  return (
+    <Link
+      href={link.href}
+      aria-current={active ? "page" : undefined}
+      className={`flex h-9 items-center gap-2.5 rounded-lg px-2.5 text-sm transition-colors ${
+        active ? "bg-sidebar-accent font-medium text-sidebar-foreground" : "text-sidebar-foreground/80 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground"
+      }`}
+    >
+      <Icon aria-hidden="true" className={`size-4 shrink-0 ${active ? "text-primary" : "text-sidebar-foreground/70"}`} />
+      {link.label}
+    </Link>
+  );
+}
+
+function MobileItem({ link, active, onNavigate }: { link: NavLink; active: boolean; onNavigate: () => void }) {
+  return (
+    <Link href={link.href} aria-current={active ? "page" : undefined} className={`rounded-xl px-3 py-2 ${active ? "bg-foreground text-background" : ""}`} onClick={onNavigate}>
+      <span className="block text-sm font-medium">{link.label}</span>
+      <span className={`block text-xs ${active ? "text-background/70" : "text-foreground/70"}`}>{link.detail}</span>
+    </Link>
   );
 }

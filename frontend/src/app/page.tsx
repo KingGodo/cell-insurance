@@ -23,7 +23,7 @@ const services = [
   },
   {
     title: "Segments",
-    body: "The book splits into leaving, watch, and steady, then again by value and by what they hold.",
+    body: "The book splits by risk and by value, then again by what they hold.",
     href: "/login?as=admin",
     tone: "light" as const,
     icon: UserRound,

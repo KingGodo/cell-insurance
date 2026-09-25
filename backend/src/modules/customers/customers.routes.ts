@@ -22,6 +22,7 @@ const customerInclude = {
   insights: { orderBy: { createdAt: 'desc' as const } },
   recommendations: { orderBy: { createdAt: 'desc' as const } },
   retentions: { where: { status: 'OPEN' as const }, orderBy: { createdAt: 'desc' as const }, take: 1 },
+  aiFeatures: { orderBy: { capturedAt: 'desc' as const }, take: 1 },
 } satisfies Prisma.CustomerInclude
 
 export const customersRouter = Router()
@@ -159,6 +160,7 @@ customersRouter.get(
         insights: customer.insights,
         recommendations: customer.recommendations,
         retentions: customer.retentions,
+        features: customer.aiFeatures[0]?.featureSet ?? null,
         recentClaims: customer.claims,
         recentVisits: customer.visits,
         recentPharmacy: customer.pharmacy,

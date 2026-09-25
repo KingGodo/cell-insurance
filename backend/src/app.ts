@@ -7,6 +7,8 @@ import { aiRouter } from './modules/ai/ai.routes'
 import { analyticsRouter } from './modules/analytics/analytics.routes'
 import { authRouter } from './modules/auth/auth.routes'
 import { claimsRouter } from './modules/claims/claims.routes'
+import { configurationRouter } from './modules/configuration/configuration.routes'
+import { retentionsRouter } from './modules/retentions/retentions.routes'
 import { customersRouter } from './modules/customers/customers.routes'
 import { medicalRouter } from './modules/medical/medical.routes'
 import { notificationsRouter } from './modules/notifications/notifications.routes'
@@ -32,6 +34,8 @@ export function createApp() {
   app.use('/api/v1/providers', providersRouter)
   app.use('/api/v1/ai', aiRouter)
   app.use('/api/v1/analytics', analyticsRouter)
+  app.use('/api/v1/configuration', configurationRouter)
+  app.use('/api/v1/retentions', retentionsRouter)
   app.use('/api/v1/notifications', notificationsRouter)
 
   app.use(notFoundHandler)

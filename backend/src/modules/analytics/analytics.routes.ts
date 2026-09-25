@@ -88,3 +88,53 @@ analyticsRouter.get(
     })
   }),
 )
+
+analyticsRouter.get(
+  '/insights',
+  asyncHandler(async (_req, res) => {
+    await scoreBook()
+    const rows = await prisma.customer.findMany({
+      where: { profile: { isNot: null } },
+      select: {
+        id: true,
+        customerCode: true,
+        firstName: true,
+        lastName: true,
+        location: true,
+        profile: { select: { riskScore: true, valueScore: true, riskBand: true, valueBand: true } },
+        aiFeatures: { orderBy: { capturedAt: 'desc' }, take: 1, select: { featureSet: true } },
+      },
+    })
+    const rank = { LEAVING: 0, WATCH: 1, STEADY: 2 }
+    const insights = rows
+      .map((row) => {
+        const feature = (row.aiFeatures[0]?.featureSet ?? {}) as {
+          riskReasons?: string[]
+          valueReasons?: string[]
+          riskModelVersion?: string
+          valueModelVersion?: string
+        }
+        return {
+          id: row.id,
+          customerCode: row.customerCode,
+          firstName: row.firstName,
+          lastName: row.lastName,
+          location: row.location,
+          riskScore: row.profile?.riskScore ?? 0,
+          valueScore: row.profile?.valueScore ?? 0,
+          riskBand: row.profile?.riskBand ?? 'STEADY',
+          valueBand: row.profile?.valueBand ?? 'LOWER',
+          riskReasons: feature.riskReasons ?? [],
+          valueReasons: feature.valueReasons ?? [],
+          riskModelVersion: feature.riskModelVersion ?? 'customeriq-xgb-sim-v1',
+          valueModelVersion: feature.valueModelVersion ?? 'customeriq-value-sim-v1',
+        }
+      })
+      .sort((a, b) => {
+        const risk = rank[a.riskBand] - rank[b.riskBand]
+        if (risk !== 0) return risk
+        return b.valueScore - a.valueScore
+      })
+    res.json({ data: insights })
+  }),
+)

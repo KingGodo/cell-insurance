@@ -2,6 +2,7 @@ import Link from "next/link";
 import { api } from "@/lib/api";
 import { Offline } from "@/components/offline";
 import { when } from "@/lib/format";
+import { RiskChip, ValueChip } from "@/components/score-meter";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,12 @@ type CustomerRow = {
   location: string;
   customerSince: string;
   segments: Array<{ label: string; kind: string }>;
+  profile: {
+    riskScore: number;
+    valueScore: number;
+    riskBand: string;
+    valueBand: string;
+  } | null;
 };
 
 export default async function CustomersPage({
@@ -37,7 +44,7 @@ export default async function CustomersPage({
       <header className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
           <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Customers</p>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight md:text-3xl">Find the relationship</h1>
+          <h1 className="mt-1 text-xl font-semibold tracking-tight">Find the relationship</h1>
         </div>
         <form className="flex gap-2" action="/customers">
           <label className="sr-only" htmlFor="search">
@@ -58,6 +65,8 @@ export default async function CustomersPage({
               <TableHead>Code</TableHead>
               <TableHead>Location</TableHead>
               <TableHead>Since</TableHead>
+              <TableHead>Risk</TableHead>
+              <TableHead>Value</TableHead>
               <TableHead>Segment</TableHead>
             </TableRow>
           </TableHeader>
@@ -74,7 +83,13 @@ export default async function CustomersPage({
                   <TableCell>{customer.customerCode}</TableCell>
                   <TableCell>{customer.location}</TableCell>
                   <TableCell>{when(customer.customerSince)}</TableCell>
-                  <TableCell>{product ? <Badge variant="secondary">{product.label}</Badge> : "—"}</TableCell>
+                  <TableCell>
+                    {customer.profile ? <RiskChip band={customer.profile.riskBand} score={customer.profile.riskScore} /> : "—"}
+                  </TableCell>
+                  <TableCell>
+                    {customer.profile ? <ValueChip band={customer.profile.valueBand} score={customer.profile.valueScore} /> : "—"}
+                  </TableCell>
+                  <TableCell>{product ? <Badge className="bg-foreground text-primary">{product.label}</Badge> : "—"}</TableCell>
                 </TableRow>
               );
             })}

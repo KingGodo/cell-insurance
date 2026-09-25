@@ -1,3 +1,12 @@
+---
+title: CustomerIQ
+created: 2026-09-24
+author: AI-assisted
+last_updated: 2026-09-25
+updated_by: AI-assisted
+status: active
+---
+
 # CustomerIQ
 
 ## Intelligent Customer & Claims Platform for Cell Group
@@ -26,38 +35,9 @@ The system will consist of:
 
 ---
 
-# 2. The Problem
+# 2. Problem statement
 
-Cell Group operates across multiple areas including insurance, medical aid and healthcare services.
-
-A customer may therefore interact with Cell through different services and channels.
-
-For example, one customer may have:
-
-* An insurance policy
-* Medical aid membership
-* Dependants
-* Insurance claims
-* Medical claims
-* Healthcare visits
-* Pharmacy interactions
-* Customer support conversations
-* Payments
-* Policy renewals
-
-When this information is distributed across different systems or departments, it can become difficult to obtain a complete picture of the customer's relationship with Cell.
-
-This can result in:
-
-* Fragmented customer information
-* Repetitive customer verification
-* Slower customer service
-* Limited visibility into customer journeys
-* Difficulty identifying unusual claim patterns
-* Missed opportunities to proactively assist customers
-* Limited understanding of customer engagement
-
-CustomerIQ addresses this by creating a **unified customer intelligence layer**.
+Winning a new client costs more than keeping one Cell already has. The book still loses people because there is no profile that shows who is worth keeping and who is starting to leave, and no intervention that reaches them before they go. A lapse is the expensive end of the story: replacing that client means finding, convincing, and onboarding someone new. The cheaper action is a timely offer while they are still a client. Without a profile of value and of risk, everyone looks the same until they have already left, and a call after they are gone is not retention.
 
 ---
 

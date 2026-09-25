@@ -1,5 +1,5 @@
-import { AdminBook } from "@/components/admin-book";
+import { AiOverview } from "@/components/ai-overview";
 
 export default function DashboardPage() {
-  return <AdminBook section="book" />;
+  return <AiOverview />;
 }

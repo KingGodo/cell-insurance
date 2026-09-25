@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { SignalBadge } from "@/components/signal-badge";
-import { labelize, money, when } from "@/lib/format";
+import { labelize, money, riskTerm, valueTerm, when } from "@/lib/format";
 
 const sections = [
   { href: "#profile", label: "Profile" },
@@ -46,7 +46,33 @@ export type CustomerRecordData = {
     valueBand?: string;
   } | null;
   segments: Array<{ kind: string; label: string }>;
-  retentions?: Array<{ title: string; reason: string; action: string }>;
+  retentions?: Array<{ title: string; reason: string; action: string; cost?: number | null; channels?: string[]; valueScore?: number; riskScore?: number }>;
+  features?: {
+    modelVersion: string;
+    valueModelVersion?: string;
+    prediction: number;
+    valuePrediction?: number;
+    inputs: {
+      claimFrequency: number;
+      claimSentiment: number;
+      premiumShock: number;
+      seasonalPressure: number;
+      diaspora: boolean;
+      payerLocation: string;
+      paymentLatenessDays: number;
+      paymentJitterDays: number;
+      dominantChannel: string;
+      employer: string | null;
+    };
+    valueInputs?: {
+      lineCount: number;
+      claimToPremiumRatio: number;
+      affinityGroup: string | null;
+      tenureYears: number;
+      renewed: boolean;
+      annualizedPremium: number;
+    };
+  } | null;
   policies: Array<{
     id: string;
     policyNumber: string;
@@ -152,21 +178,72 @@ export function CustomerRecord({
         </div>
       </header>
 
+      {showScores && data.features?.valueInputs ? (
+        <section className="overflow-hidden rounded-2xl border border-border bg-card">
+          <div className="border-b border-border px-4 py-3">
+            <h2 className="text-sm font-semibold">What the value model used</h2>
+            <p className="mt-1 text-xs text-muted-foreground">Calculated from the lines they hold, claims against premium, corporate linkage, tenure, and annual premium. {data.features.valueModelVersion}</p>
+          </div>
+          <dl className="grid gap-px bg-border sm:grid-cols-2">
+            {[
+              ["Multi-line density", `${data.features.valueInputs.lineCount} active lines`],
+              ["Claim to premium", `${Math.round(data.features.valueInputs.claimToPremiumRatio * 100)}% of annual premium`],
+              ["Affinity group", data.features.valueInputs.affinityGroup ?? "No corporate link"],
+              ["Tenure and loyalty", `${data.features.valueInputs.tenureYears} years${data.features.valueInputs.renewed ? " · renewed" : ""}`],
+              ["Annualized premium", money(data.features.valueInputs.annualizedPremium)],
+            ].map(([label, value]) => (
+              <div key={label} className="bg-card px-4 py-3">
+                <dt className="text-xs text-muted-foreground">{label}</dt>
+                <dd className="mt-1 text-sm">{value}</dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+      ) : null}
+
+      {showScores && data.features?.inputs ? (
+        <section className="overflow-hidden rounded-2xl border border-border bg-card">
+          <div className="border-b border-border px-4 py-3">
+            <h2 className="text-sm font-semibold">What the risk model used</h2>
+            <p className="mt-1 text-xs text-muted-foreground">Calculated from claims, contact sentiment, the renewal premium, season, and how the premium was paid. {data.features.modelVersion}</p>
+          </div>
+          <dl className="grid gap-px bg-border sm:grid-cols-2">
+            {[
+              ["Claims experience", `${data.features.inputs.claimFrequency} insurance claims a year`],
+              ["Sentiment", data.features.inputs.claimSentiment > 0.2 ? "Negative" : data.features.inputs.claimSentiment < 0 ? "Positive" : "Neutral"],
+              ["Premium shock", `${Math.round(data.features.inputs.premiumShock * 100)}% versus the previous premium`],
+              ["Seasonal pressure", `${Math.round(data.features.inputs.seasonalPressure * 100)}% of claims and dues fall in Nov–Feb`],
+              ["Payer location", data.features.inputs.diaspora ? `Diaspora · ${data.features.inputs.payerLocation}` : data.features.inputs.payerLocation],
+              ["Payment timing", `${data.features.inputs.paymentLatenessDays} days late · jitter ${data.features.inputs.paymentJitterDays} days`],
+              ["Payment channel", labelize(data.features.inputs.dominantChannel)],
+              ["Employer", data.features.inputs.employer ?? "None on file"],
+            ].map(([label, value]) => (
+              <div key={label} className="bg-card px-4 py-3">
+                <dt className="text-xs text-muted-foreground">{label}</dt>
+                <dd className="mt-1 text-sm">{value}</dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+      ) : null}
+
       {showScores && record?.riskBand ? (
         <section className="grid gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-3">
           <article className="bg-card px-4 py-3">
-            <p className="text-xs text-muted-foreground">Risk of leaving</p>
-            <p className="mt-1 text-sm font-semibold">{labelize(record.riskBand)} · {record.riskScore}</p>
+            <p className="text-xs text-muted-foreground">Risk</p>
+            <p className="mt-1 text-sm font-semibold">{riskTerm(record.riskBand)} · {record.riskScore}</p>
           </article>
           <article className="bg-card px-4 py-3">
             <p className="text-xs text-muted-foreground">Value</p>
-            <p className="mt-1 text-sm font-semibold">{record.valueBand ? labelize(record.valueBand) : "—"} · {record.valueScore}</p>
+            <p className="mt-1 text-sm font-semibold">{record.valueBand ? valueTerm(record.valueBand) : "—"} · {record.valueScore}</p>
           </article>
           <article className="bg-card px-4 py-3">
-            <p className="text-xs text-muted-foreground">Retention plan</p>
+            <p className="text-xs font-medium text-foreground/70">Retention plan</p>
             <p className="mt-1 text-sm font-semibold">{retention?.title ?? "None open"}</p>
-            {retention ? <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{retention.reason}</p> : null}
-            {retention ? <p className="mt-1 text-xs leading-relaxed">{retention.action}</p> : null}
+            {retention?.valueScore != null ? <p className="mt-1 text-sm">Value {retention.valueScore} · Risk {retention.riskScore}</p> : null}
+            {retention?.cost != null ? <p className="mt-1 text-sm">Cost {money(Number(retention.cost))}</p> : null}
+            {retention?.channels && retention.channels.length > 0 ? <p className="mt-1 text-sm">{retention.channels.map((channel) => channel.replace(/_/g, " ").toLowerCase()).join(" · ")}</p> : null}
+            {retention ? <p className="mt-1 text-sm leading-relaxed text-foreground/80">{retention.reason}</p> : null}
           </article>
         </section>
       ) : null}
@@ -366,7 +443,7 @@ export function CustomerRecord({
           ))}
           {data.insights.map((insight) => (
             <li key={insight.id} className="px-4 py-3 text-sm">
-              <p className="text-xs text-muted-foreground">{insight.severity === "WARNING" ? "Watch" : "Note"}</p>
+              <p className="text-xs text-muted-foreground">{insight.severity === "WARNING" ? "Risk" : "Note"}</p>
               <p className="font-medium">{insight.title}</p>
               <p className="text-xs text-muted-foreground">{insight.detail}</p>
             </li>

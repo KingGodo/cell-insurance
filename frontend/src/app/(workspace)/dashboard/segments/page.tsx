@@ -1,5 +1,5 @@
-import { AdminBook } from "@/components/admin-book";
+import { SegmentMatrix } from "@/components/segment-matrix";
 
 export default function SegmentsPage() {
-  return <AdminBook section="segments" />;
+  return <SegmentMatrix />;
 }
