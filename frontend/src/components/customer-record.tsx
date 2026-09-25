@@ -146,16 +146,19 @@ export function CustomerRecord({
   showMessages = false,
   showScores = false,
   sectionLinks,
+  section,
 }: {
   data: CustomerRecordData;
   journey: JourneyEvent[];
   showMessages?: boolean;
   showScores?: boolean;
   sectionLinks?: Array<{ href: string; label: string }>;
+  section?: "profile" | "cover" | "medical" | "care" | "claims" | "journey" | "contact" | "next";
 }) {
   const record = data.profile;
   const customer = data.customer;
   const links = sectionLinks ?? (showMessages ? [...sections, { href: "#messages", label: "Messages" }] : sections);
+  const show = (id: string) => !section || section === id;
   const visibleSegments = showScores ? data.segments : data.segments.filter((item) => item.kind !== "RISK" && item.kind !== "VALUE");
   const retention = data.retentions?.[0];
 
@@ -178,7 +181,7 @@ export function CustomerRecord({
         </div>
       </header>
 
-      {showScores && data.features?.valueInputs ? (
+      {!section && showScores && data.features?.valueInputs ? (
         <section className="overflow-hidden rounded-2xl border border-border bg-card">
           <div className="border-b border-border px-4 py-3">
             <h2 className="text-sm font-semibold">What the value model used</h2>
@@ -201,7 +204,7 @@ export function CustomerRecord({
         </section>
       ) : null}
 
-      {showScores && data.features?.inputs ? (
+      {!section && showScores && data.features?.inputs ? (
         <section className="overflow-hidden rounded-2xl border border-border bg-card">
           <div className="border-b border-border px-4 py-3">
             <h2 className="text-sm font-semibold">What the risk model used</h2>
@@ -227,7 +230,7 @@ export function CustomerRecord({
         </section>
       ) : null}
 
-      {showScores && record?.riskBand ? (
+      {!section && showScores && record?.riskBand ? (
         <section className="grid gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-3">
           <article className="bg-card px-4 py-3">
             <p className="text-xs text-muted-foreground">Risk</p>
@@ -248,14 +251,17 @@ export function CustomerRecord({
         </section>
       ) : null}
 
-      <nav className="flex flex-wrap gap-1" aria-label="Profile sections">
-        {links.map((section) => (
-          <a key={section.href} href={section.href} className="rounded-full px-3 py-1 text-sm text-muted-foreground hover:bg-secondary hover:text-foreground">
-            {section.label}
-          </a>
-        ))}
-      </nav>
+      {!section ? (
+        <nav className="flex flex-wrap gap-1" aria-label="Profile sections">
+          {links.map((item) => (
+            <a key={item.href} href={item.href} className="rounded-full px-3 py-1 text-sm text-muted-foreground hover:bg-secondary hover:text-foreground">
+              {item.label}
+            </a>
+          ))}
+        </nav>
+      ) : null}
 
+      {show("profile") ? (
       <Panel id="profile" title="Profile">
         <dl className="grid gap-px bg-border sm:grid-cols-2 lg:grid-cols-4">
           {[
@@ -283,7 +289,9 @@ export function CustomerRecord({
           ))}
         </dl>
       </Panel>
+      ) : null}
 
+      {show("cover") ? (
       <Panel id="cover" title="Insurance">
         {data.policies.length === 0 ? <Empty>No policies on file.</Empty> : null}
         <ul className="divide-y divide-border">
@@ -307,7 +315,9 @@ export function CustomerRecord({
           ))}
         </ul>
       </Panel>
+      ) : null}
 
+      {show("medical") ? (
       <Panel id="medical" title="Medical aid">
         {data.memberships.length === 0 ? <Empty>No medical aid on file.</Empty> : null}
         <ul className="divide-y divide-border">
@@ -331,7 +341,9 @@ export function CustomerRecord({
           ))}
         </ul>
       </Panel>
+      ) : null}
 
+      {show("care") ? (
       <Panel id="care" title="Healthcare">
         <div className="grid lg:grid-cols-2 lg:divide-x lg:divide-border">
           <div>
@@ -368,7 +380,9 @@ export function CustomerRecord({
           </div>
         </div>
       </Panel>
+      ) : null}
 
+      {show("claims") ? (
       <Panel id="claims" title="Claims">
         {data.recentClaims.length === 0 ? <Empty>No claims on file.</Empty> : null}
         <ul className="divide-y divide-border">
@@ -398,7 +412,9 @@ export function CustomerRecord({
           ))}
         </ul>
       </Panel>
+      ) : null}
 
+      {show("journey") ? (
       <Panel id="journey" title="Journey">
         {journey.length === 0 ? <Empty>No events on file.</Empty> : null}
         <ol className="divide-y divide-border">
@@ -412,7 +428,9 @@ export function CustomerRecord({
           ))}
         </ol>
       </Panel>
+      ) : null}
 
+      {show("contact") ? (
       <Panel id="contact" title="Contact">
         <p className="px-4 pt-3 text-xs text-muted-foreground">
           {record?.digitalInteractionCount ?? 0} digital · {record?.supportInteractionCount ?? 0} support
@@ -430,7 +448,9 @@ export function CustomerRecord({
           ))}
         </ul>
       </Panel>
+      ) : null}
 
+      {show("next") ? (
       <Panel id="next" title="Next step">
         {data.insights.length === 0 && data.recommendations.length === 0 ? <Empty>No open insight or recommendation.</Empty> : null}
         <ul className="divide-y divide-border">
@@ -450,6 +470,7 @@ export function CustomerRecord({
           ))}
         </ul>
       </Panel>
+      ) : null}
     </div>
   );
 }

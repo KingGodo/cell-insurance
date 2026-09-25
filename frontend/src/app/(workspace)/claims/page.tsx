@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { api } from "@/lib/api";
+import { api, getSession } from "@/lib/api";
 import { Offline } from "@/components/offline";
 import { SignalBadge } from "@/components/signal-badge";
 import { labelize, money, when } from "@/lib/format";
@@ -34,6 +34,8 @@ export default async function ClaimsPage({
   if (query.signal) params.set("signal", query.signal);
   if (query.status) params.set("status", query.status);
 
+  const session = await getSession();
+  const ownClaims = session?.role === "CUSTOMER";
   let payload: { data: ClaimRow[]; meta: { total: number } };
   try {
     payload = await api(`/claims?${params.toString()}`);
@@ -44,9 +46,12 @@ export default async function ClaimsPage({
   return (
     <div className="space-y-6">
       <header>
-        <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Claims</p>
-        <h1 className="mt-1 text-2xl font-semibold tracking-tight md:text-3xl">Work the queue</h1>
+        <h1 className="text-xl font-semibold tracking-tight">{ownClaims ? "Claims" : "Work the queue"}</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {ownClaims ? "Status of the claims on your record." : `${payload.meta.total} claims in this view`}
+        </p>
       </header>
+      {ownClaims ? null : (
       <nav className="flex flex-wrap gap-1" aria-label="Claim filters">
         {filters.map((filter) => {
           const target = new URL(filter.href, "http://local");
@@ -67,17 +72,18 @@ export default async function ClaimsPage({
           );
         })}
       </nav>
-      <p className="text-sm text-muted-foreground">{payload.meta.total} claims in this view</p>
+      )}
+      {ownClaims ? null : <p className="text-sm text-muted-foreground">{payload.meta.total} claims in this view</p>}
       <div className="overflow-hidden rounded-2xl border border-border bg-card">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Claim</TableHead>
-              <TableHead>Customer</TableHead>
+              {ownClaims ? null : <TableHead>Customer</TableHead>}
               <TableHead>Type</TableHead>
               <TableHead>Amount</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Signal</TableHead>
+              {ownClaims ? null : <TableHead>Signal</TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -89,15 +95,19 @@ export default async function ClaimsPage({
                   </Link>
                   <span className="mt-1 block text-xs text-muted-foreground">{when(claim.submittedAt)}</span>
                 </TableCell>
-                <TableCell>
-                  {claim.customer.firstName} {claim.customer.lastName}
-                </TableCell>
+                {ownClaims ? null : (
+                  <TableCell>
+                    {claim.customer.firstName} {claim.customer.lastName}
+                  </TableCell>
+                )}
                 <TableCell>{labelize(claim.type)}</TableCell>
                 <TableCell>{money(claim.amount)}</TableCell>
                 <TableCell>{labelize(claim.status)}</TableCell>
-                <TableCell>
-                  <SignalBadge signal={claim.reviewSignal} />
-                </TableCell>
+                {ownClaims ? null : (
+                  <TableCell>
+                    <SignalBadge signal={claim.reviewSignal} />
+                  </TableCell>
+                )}
               </TableRow>
             ))}
           </TableBody>

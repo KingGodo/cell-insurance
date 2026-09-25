@@ -3,6 +3,25 @@ export const RISK_LINE = 55;
 
 export type MatrixSlug = "vvip" | "growable" | "ghost" | "save-me-now";
 
+export const segmentColor: Record<MatrixSlug, string> = {
+  ghost: "#d97706",
+  "save-me-now": "#e11d48",
+  growable: "#4f46e5",
+  vvip: "#0f766e",
+};
+
+export const riskColor = {
+  high: "#e11d48",
+  medium: "#d97706",
+  low: "#0f766e",
+} as const;
+
+export const valueColor = {
+  high: "#0f766e",
+  medium: "#4f46e5",
+  low: "#57534e",
+} as const;
+
 export type MatrixSegment = {
   slug: MatrixSlug;
   name: string;

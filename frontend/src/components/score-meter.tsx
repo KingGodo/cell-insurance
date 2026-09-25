@@ -1,4 +1,5 @@
 import { riskTerm, valueTerm } from "@/lib/format";
+import { riskColor, valueColor } from "@/lib/matrix";
 
 export function ScoreBar({ score, fill, track }: { score: number; fill: string; track: string }) {
   return (
@@ -8,30 +9,21 @@ export function ScoreBar({ score, fill, track }: { score: number; fill: string; 
   );
 }
 
-export function RiskChip({ band, score }: { band: string; score: number }) {
-  const surface =
-    band === "LEAVING"
-      ? "bg-foreground text-primary"
-      : band === "WATCH"
-        ? "bg-primary text-foreground"
-        : "bg-accent text-foreground";
+function Chip({ label, color }: { label: string; color: string }) {
   return (
-    <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${surface}`}>
-      {riskTerm(band)} {score}
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-2.5 py-1 text-xs font-medium">
+      <span className="size-2 rounded-full" style={{ background: color }} aria-hidden="true" />
+      {label}
     </span>
   );
 }
 
+export function RiskChip({ band, score }: { band: string; score: number }) {
+  const color = band === "LEAVING" ? riskColor.high : band === "WATCH" ? riskColor.medium : riskColor.low;
+  return <Chip label={`${riskTerm(band)} ${score}`} color={color} />;
+}
+
 export function ValueChip({ band, score }: { band: string; score: number }) {
-  const surface =
-    band === "HIGH"
-      ? "bg-primary text-foreground"
-      : band === "CORE"
-        ? "bg-foreground text-primary"
-        : "bg-accent text-foreground";
-  return (
-    <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${surface}`}>
-      {valueTerm(band)} {score}
-    </span>
-  );
+  const color = band === "HIGH" ? valueColor.high : band === "CORE" ? valueColor.medium : valueColor.low;
+  return <Chip label={`${valueTerm(band)} ${score}`} color={color} />;
 }

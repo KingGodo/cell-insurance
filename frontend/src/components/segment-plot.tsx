@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { RISK_LINE, VALUE_LINE, matrixSegments, type MatrixSlug } from "@/lib/matrix";
+import { RISK_LINE, VALUE_LINE, matrixSegments, segmentColor, type MatrixSlug } from "@/lib/matrix";
 
 export type PlotPoint = {
   id: string;
@@ -21,10 +21,10 @@ const plotW = width - left - right;
 const plotH = height - top - bottom;
 
 const mark: Record<MatrixSlug, { core: string; halo: string; wash: string }> = {
-  vvip: { core: "#0f766e", halo: "#99f6e4", wash: "#f0fdfa" },
-  growable: { core: "#4f46e5", halo: "#c7d2fe", wash: "#eef2ff" },
-  ghost: { core: "#d97706", halo: "#fde68a", wash: "#fffbeb" },
-  "save-me-now": { core: "#e11d48", halo: "#fecdd3", wash: "#fff1f2" },
+  vvip: { core: segmentColor.vvip, halo: "#99f6e4", wash: "#f0fdfa" },
+  growable: { core: segmentColor.growable, halo: "#c7d2fe", wash: "#eef2ff" },
+  ghost: { core: segmentColor.ghost, halo: "#fde68a", wash: "#fffbeb" },
+  "save-me-now": { core: segmentColor["save-me-now"], halo: "#fecdd3", wash: "#fff1f2" },
 };
 
 function xOf(value: number) {

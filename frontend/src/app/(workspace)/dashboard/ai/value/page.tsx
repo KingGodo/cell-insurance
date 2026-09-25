@@ -2,7 +2,8 @@ import Link from "next/link";
 import { api } from "@/lib/api";
 import { MiniBars } from "@/components/mini-bars";
 import { Offline } from "@/components/offline";
-import { valueTerm } from "@/lib/format";
+import { valueColor } from "@/lib/matrix";
+import { ValueChip } from "@/components/score-meter";
 
 type Row = {
   id: string;
@@ -41,10 +42,10 @@ export default async function ValueFindingsPage() {
         </p>
       </header>
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <Card label="Average value" value={average} note="Out of 100" surface="bg-foreground text-primary" />
-        <Card label="High value" value={high.length} note="Score 70 or more" surface="bg-primary text-foreground" />
-        <Card label="Medium value" value={medium.length} note="Score 40 to 69" surface="bg-accent text-foreground" />
-        <Card label="Low value" value={low.length} note="Score under 40" surface="bg-[oklch(0.32_0.05_55)] text-primary" />
+        <Card label="Average value" value={average} note="Out of 100" color="#121212" />
+        <Card label="High value" value={high.length} note="Score 70 or more" color={valueColor.high} />
+        <Card label="Medium value" value={medium.length} note="Score 40 to 69" color={valueColor.medium} />
+        <Card label="Low value" value={low.length} note="Score under 40" color={valueColor.low} />
       </section>
       <section className="rounded-2xl border border-border bg-card px-4 py-4">
         <MiniBars
@@ -68,7 +69,7 @@ export default async function ValueFindingsPage() {
                 <p className="text-sm font-semibold">{row.firstName} {row.lastName}</p>
                 <p className="text-sm text-foreground/75">{row.customerCode}</p>
               </div>
-              <p className="rounded-full bg-primary px-2.5 py-1 text-xs font-medium text-foreground">{valueTerm(row.valueBand)} {row.valueScore}</p>
+              <ValueChip band={row.valueBand} score={row.valueScore} />
             </li>
           ))}
         </ul>
@@ -77,12 +78,15 @@ export default async function ValueFindingsPage() {
   );
 }
 
-function Card({ label, value, note, surface }: { label: string; value: number; note: string; surface: string }) {
+function Card({ label, value, note, color }: { label: string; value: number; note: string; color: string }) {
   return (
-    <article className={`rounded-2xl px-4 py-4 ${surface}`}>
-      <p className="text-sm font-medium">{label}</p>
-      <p className="mt-2 text-3xl font-semibold tracking-tight tabular-nums">{value}</p>
-      <p className="mt-1 text-sm opacity-90">{note}</p>
+    <article className="rounded-xl border border-border bg-card px-3 py-2.5">
+      <p className="flex items-center gap-1.5 text-xs font-medium">
+        <span className="size-2 rounded-full" style={{ background: color }} aria-hidden="true" />
+        {label}
+      </p>
+      <p className="mt-1 text-lg font-semibold tracking-tight tabular-nums" style={{ color }}>{value}</p>
+      <p className="text-xs text-muted-foreground">{note}</p>
     </article>
   );
 }

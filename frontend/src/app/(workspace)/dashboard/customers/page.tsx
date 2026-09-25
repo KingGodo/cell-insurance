@@ -28,7 +28,7 @@ export default async function CustomerOverviewPage() {
       <header>
         <h1 className="text-xl font-semibold tracking-tight">Overview</h1>
         <p className="mt-1 max-w-3xl text-sm text-foreground/75">
-          {people.length} customers. The graph shows how the book is spread across towns.
+          {people.length} customers, counted by where they live, how they engage, and what they hold.
         </p>
       </header>
       <section className="grid gap-3 lg:grid-cols-3">

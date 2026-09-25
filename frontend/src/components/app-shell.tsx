@@ -3,8 +3,8 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
-import { BarChart3, Bookmark, ClipboardList, FileSearch, HeartPulse, LayoutDashboard, LogOut, Menu, MessageSquare, Settings, Shield, SlidersHorizontal, Sparkles, Stethoscope, Tags, UserRound, Users, Workflow, X, type LucideIcon } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { BarChart3, Bookmark, ChevronDown, ChevronUp, ClipboardList, FileSearch, HeartPulse, LayoutDashboard, LogOut, Menu, MessageSquare, Settings, Shield, SlidersHorizontal, Sparkles, Stethoscope, Tags, UserRound, Users, Workflow, X, type LucideIcon } from "lucide-react";
 import { logout } from "@/lib/actions";
 import { roleDetail, roleLabel } from "@/lib/format";
 import { Wordmark } from "@/components/brand";
@@ -51,7 +51,7 @@ const staffSections: Array<{ heading: string; links: NavLink[] }> = [
 const staffLinks = staffSections.flatMap((section) => section.links);
 
 const customerLinks = [
-  { href: "/account", label: "Profile", detail: "Who you are on the book", icon: UserRound },
+  { href: "/account", label: "Overview", detail: "Your cover at a glance", icon: LayoutDashboard },
   { href: "/account/cover", label: "Insurance", detail: "Policies and renewal", icon: Shield },
   { href: "/account/medical", label: "Medical aid", detail: "Plan and dependants", icon: HeartPulse },
   { href: "/account/care", label: "Healthcare", detail: "Visits and pharmacy", icon: Stethoscope },
@@ -93,8 +93,36 @@ export function AppShell({
 }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
+  const accountRef = useRef<HTMLDivElement>(null);
   const links = role === "CUSTOMER" ? customerLinks : staffLinks;
-  const current = links.find((link) => isCurrent(pathname, link.href)) ?? links[0];
+  const profileHref = role === "CUSTOMER" ? "/account/profile" : "/account";
+  const current =
+    role === "CUSTOMER" && pathname.startsWith("/account/profile")
+      ? { href: "/account/profile", label: "Profile", detail: "Who you are on the book", icon: UserRound }
+      : role !== "CUSTOMER" && (pathname === "/account" || pathname.startsWith("/account/"))
+        ? { href: "/account", label: "Profile", detail: "Signed-in account", icon: UserRound }
+        : (links.find((link) => isCurrent(pathname, link.href)) ?? links[0]);
+
+  useEffect(() => {
+    setAccountOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!accountOpen) return;
+    function onPointer(event: MouseEvent) {
+      if (!accountRef.current?.contains(event.target as Node)) setAccountOpen(false);
+    }
+    function onKey(event: KeyboardEvent) {
+      if (event.key === "Escape") setAccountOpen(false);
+    }
+    document.addEventListener("mousedown", onPointer);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onPointer);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [accountOpen]);
 
   return (
     <div className="min-h-screen md:grid md:grid-cols-[15rem_1fr]">
@@ -158,13 +186,41 @@ export function AppShell({
             <p className="hidden text-xs text-muted-foreground md:block">{today}</p>
             <span className="hidden h-4 w-px bg-border md:block" aria-hidden="true" />
             <p className="hidden rounded-full border border-border bg-card px-2.5 py-1 text-xs text-muted-foreground sm:block">{roleLabel(role)}</p>
-            <span
-              className="inline-flex size-8 items-center justify-center rounded-full bg-foreground text-[11px] font-semibold text-primary"
-              title={name}
-              aria-label={name}
-            >
-              {initials(name)}
-            </span>
+            <div ref={accountRef} className="relative">
+              <button
+                type="button"
+                aria-expanded={accountOpen}
+                aria-controls="account-menu"
+                aria-label={accountOpen ? "Close account menu" : "Open account menu"}
+                onClick={() => setAccountOpen((value) => !value)}
+                className="inline-flex h-9 items-center gap-1 rounded-full border border-border bg-card pr-2 pl-1"
+              >
+                <span className="inline-flex size-7 items-center justify-center rounded-full bg-foreground text-[11px] font-semibold text-primary" aria-hidden="true">
+                  {initials(name)}
+                </span>
+                {accountOpen ? <ChevronUp aria-hidden="true" className="size-4" /> : <ChevronDown aria-hidden="true" className="size-4" />}
+              </button>
+              {accountOpen ? (
+                <div id="account-menu" role="menu" className="absolute top-11 right-0 w-48 rounded-2xl border border-border bg-card p-1.5 shadow-lg">
+                  <p className="truncate px-2.5 py-1.5 text-xs text-muted-foreground">{name}</p>
+                  <Link
+                    href={profileHref}
+                    role="menuitem"
+                    className="flex h-9 items-center gap-2 rounded-xl px-2.5 text-sm hover:bg-accent"
+                    onClick={() => setAccountOpen(false)}
+                  >
+                    <UserRound aria-hidden="true" className="size-4" />
+                    Profile
+                  </Link>
+                  <form action={logout}>
+                    <button type="submit" role="menuitem" className="flex h-9 w-full items-center gap-2 rounded-xl px-2.5 text-sm hover:bg-accent">
+                      <LogOut aria-hidden="true" className="size-4" />
+                      Log out
+                    </button>
+                  </form>
+                </div>
+              ) : null}
+            </div>
           </div>
         </header>
         {open ? (
