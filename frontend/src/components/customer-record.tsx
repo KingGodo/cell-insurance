@@ -46,7 +46,16 @@ export type CustomerRecordData = {
     valueBand?: string;
   } | null;
   segments: Array<{ kind: string; label: string }>;
-  retentions?: Array<{ title: string; reason: string; action: string; cost?: number | null; channels?: string[]; valueScore?: number; riskScore?: number }>;
+  retentions?: Array<{
+    title: string;
+    reason: string;
+    action: string;
+    cost?: number | null;
+    channels?: string[];
+    valueScore?: number;
+    riskScore?: number;
+    plan?: { name: string; summary: string; offer: string } | null;
+  }>;
   features?: {
     modelVersion: string;
     valueModelVersion?: string;

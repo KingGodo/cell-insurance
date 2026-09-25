@@ -5,6 +5,7 @@ import { asyncHandler, notFound, validateQuery } from '../../lib/http'
 import { prisma } from '../../lib/prisma'
 import { serialize } from '../../lib/serialize'
 import { assertCustomerAccess, requireAuth, staffRoles } from '../../middleware/auth'
+import { scoreBook } from '../intelligence/score'
 
 const listQuery = z.object({
   page: z.coerce.number().int().positive().default(1),
@@ -21,7 +22,12 @@ const customerInclude = {
   memberships: { include: { dependants: true } },
   insights: { orderBy: { createdAt: 'desc' as const } },
   recommendations: { orderBy: { createdAt: 'desc' as const } },
-  retentions: { where: { status: 'OPEN' as const }, orderBy: { createdAt: 'desc' as const }, take: 1 },
+  retentions: {
+    where: { status: 'OPEN' as const },
+    orderBy: { createdAt: 'desc' as const },
+    take: 4,
+    include: { plan: { select: { name: true, summary: true, offer: true } } },
+  },
   aiFeatures: { orderBy: { capturedAt: 'desc' as const }, take: 1 },
 } satisfies Prisma.CustomerInclude
 
@@ -119,6 +125,7 @@ customersRouter.get(
   '/:id/profile',
   asyncHandler(async (req, res) => {
     assertCustomerAccess(req.user!, req.params.id)
+    if (req.user!.role === 'CUSTOMER') await scoreBook()
     const customer = await prisma.customer.findUnique({
       where: { id: req.params.id },
       include: {

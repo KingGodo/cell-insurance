@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { BarChart3, Bookmark, ChevronDown, ChevronUp, ClipboardList, FileSearch, HeartPulse, LayoutDashboard, LogOut, Menu, MessageSquare, Settings, Shield, SlidersHorizontal, Sparkles, Stethoscope, Tags, UserRound, Users, Workflow, X, type LucideIcon } from "lucide-react";
+import { BadgePercent, BarChart3, Bookmark, ChevronDown, ChevronUp, ClipboardList, FileSearch, HeartPulse, LayoutDashboard, LogOut, Menu, MessageSquare, Settings, Shield, SlidersHorizontal, Sparkles, Stethoscope, Tags, UserRound, Users, Workflow, X, type LucideIcon } from "lucide-react";
 import { logout } from "@/lib/actions";
 import { roleDetail, roleLabel } from "@/lib/format";
 import { Wordmark } from "@/components/brand";
@@ -52,6 +52,7 @@ const staffLinks = staffSections.flatMap((section) => section.links);
 
 const customerLinks = [
   { href: "/account", label: "Overview", detail: "Your cover at a glance", icon: LayoutDashboard },
+  { href: "/account/promotions", label: "Promotions", detail: "Offers chosen from your cover", icon: BadgePercent },
   { href: "/account/cover", label: "Insurance", detail: "Policies and renewal", icon: Shield },
   { href: "/account/medical", label: "Medical aid", detail: "Plan and dependants", icon: HeartPulse },
   { href: "/account/care", label: "Healthcare", detail: "Visits and pharmacy", icon: Stethoscope },

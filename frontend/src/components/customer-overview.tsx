@@ -16,6 +16,7 @@ export async function CustomerOverview() {
     const data = profile.data;
     const record = data.profile;
     const renewal = data.policies[0] ? when(data.policies[0].renewalDate) : "No renewal on file";
+    const promotions = (data.retentions ?? []).filter((item) => item.plan?.offer);
     const figures = [
       { label: "Policies", value: String(record?.policyCount ?? data.policies.length), href: "/account/cover" },
       { label: "Medical aid", value: String(data.memberships.length), href: "/account/medical" },
@@ -32,6 +33,17 @@ export async function CustomerOverview() {
             {data.customer.name} · {data.customer.location} · since {when(data.customer.customerSince)}
           </p>
         </header>
+
+        {promotions.length > 0 ? (
+          <Link href="/account/promotions" className="flex flex-wrap items-center gap-2 rounded-2xl bg-foreground px-4 py-3 text-background hover:opacity-95">
+            <span className="text-xs font-semibold tracking-wide text-primary uppercase">Promotions</span>
+            {promotions.map((item) => (
+              <span key={item.plan?.name ?? item.title} className="rounded-full bg-background/10 px-2.5 py-1 text-xs">
+                {item.plan?.name ?? item.title}
+              </span>
+            ))}
+          </Link>
+        ) : null}
 
         <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {figures.map((figure) => (

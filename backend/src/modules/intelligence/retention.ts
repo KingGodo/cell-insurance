@@ -109,6 +109,42 @@ const defaultPlans: PlanSeed[] = [
       priority: 40,
     },
   },
+  {
+    code: 'family-check',
+    name: 'Family check-in',
+    summary: 'Households with children get a short check on the cover those children use.',
+    offer: 'A family check-in on the portal for the children on the membership.',
+    cost: 80,
+    channels: ['PORTAL', 'SMS'],
+    rule: {
+      code: 'family-check-rule',
+      name: 'Children on the membership',
+      summary: 'Value at least 40, risk at least 25, and a child on the membership.',
+      valueMin: 40,
+      riskMin: 25,
+      requiresChildren: true,
+      activeMonths: [],
+      priority: 15,
+    },
+  },
+  {
+    code: 'renewal-relief',
+    name: 'Renewal relief',
+    summary: 'A review of the next debit for customers who are worth keeping and close to leaving.',
+    offer: 'A review of the renewal premium before the next debit.',
+    cost: 180,
+    channels: ['EMAIL', 'CUSTOMER_SERVICE', 'PORTAL'],
+    rule: {
+      code: 'renewal-relief-rule',
+      name: 'Worth keeping and close to leaving',
+      summary: 'Value at least 70 and risk at least 55.',
+      valueMin: 70,
+      riskMin: 55,
+      requiresChildren: false,
+      activeMonths: [],
+      priority: 25,
+    },
+  },
 ]
 
 export function segmentFor(value: number, risk: number) {
@@ -196,42 +232,45 @@ export async function assignPlan(input: {
 }) {
   const month = input.now.getUTCMonth() + 1
   const children = hasChild(input.dependants, input.now)
-  const chosen = input.plans
+  const matches = input.plans
     .flatMap((plan) => plan.rules.map((rule) => ({ plan, rule })))
     .filter((item) => qualifies(item.rule, input.value, input.risk, children, month))
-    .sort((a, b) => specificity(b.rule) - specificity(a.rule) || a.rule.priority - b.rule.priority)[0]
+    .sort((a, b) => specificity(b.rule) - specificity(a.rule) || a.rule.priority - b.rule.priority)
+    .slice(0, 4)
 
-  const open = await prisma.retention.findFirst({ where: { customerId: input.customerId, status: 'OPEN' } })
-  if (!chosen) {
-    if (open) await prisma.retention.update({ where: { id: open.id }, data: { status: 'KEPT' } })
-    return
+  const openRows = await prisma.retention.findMany({ where: { customerId: input.customerId, status: 'OPEN' } })
+  const keep = new Set(matches.map((item) => `${item.plan.id}:${item.rule.id}`))
+  for (const row of openRows) {
+    if (!keep.has(`${row.planId}:${row.ruleId}`)) {
+      await prisma.retention.update({ where: { id: row.id }, data: { status: 'KEPT' } })
+    }
   }
 
-  const { plan, rule } = chosen
-  const months = rule.activeMonths.map((item) => monthName[item]).filter(Boolean).join(', ')
-  const figures = [boundText('value', rule.valueMin, rule.valueMax), boundText('risk', rule.riskMin, rule.riskMax)].filter(Boolean).join(', ')
-  const extras = [
-    rule.requiresChildren ? 'they have a child on the membership' : '',
-    months ? `this is a school reopen month (${months})` : '',
-  ].filter(Boolean)
-  const reason = `${input.firstName} qualifies for ${plan.name} under ${rule.name}. Value is ${input.value} and risk is ${input.risk}. The rule requires ${figures}.${extras.length ? ` Also, ${extras.join(', and ')}.` : ''} ${plan.summary}`
-  const channels = plan.channels.map((channel) => channelLabel[channel]).join(', ')
-  const data = {
-    planId: plan.id,
-    ruleId: rule.id,
-    title: plan.name,
-    reason,
-    action: `Send ${plan.offer} by ${channels}. The cost on this plan is ${Number(plan.cost).toFixed(0)}.`,
-    cost: plan.cost,
-    channels: plan.channels,
-    valueScore: input.value,
-    riskScore: input.risk,
+  for (const { plan, rule } of matches) {
+    const months = rule.activeMonths.map((item) => monthName[item]).filter(Boolean).join(', ')
+    const figures = [boundText('value', rule.valueMin, rule.valueMax), boundText('risk', rule.riskMin, rule.riskMax)].filter(Boolean).join(', ')
+    const extras = [
+      rule.requiresChildren ? 'they have a child on the membership' : '',
+      months ? `this is a school reopen month (${months})` : '',
+    ].filter(Boolean)
+    const reason = `${input.firstName} qualifies for ${plan.name} under ${rule.name}. Value is ${input.value} and risk is ${input.risk}. The rule requires ${figures}.${extras.length ? ` Also, ${extras.join(', and ')}.` : ''} ${plan.summary}`
+    const channels = plan.channels.map((channel) => channelLabel[channel]).join(', ')
+    const data = {
+      planId: plan.id,
+      ruleId: rule.id,
+      title: plan.name,
+      reason,
+      action: `Send ${plan.offer} by ${channels}. The cost on this plan is ${Number(plan.cost).toFixed(0)}.`,
+      cost: plan.cost,
+      channels: plan.channels,
+      valueScore: input.value,
+      riskScore: input.risk,
+    }
+    const open = openRows.find((row) => row.planId === plan.id && row.ruleId === rule.id)
+    if (open) {
+      await prisma.retention.update({ where: { id: open.id }, data })
+      continue
+    }
+    await prisma.retention.create({ data: { customerId: input.customerId, status: 'OPEN', ...data } })
   }
-
-  if (open?.planId === plan.id && open.ruleId === rule.id) {
-    await prisma.retention.update({ where: { id: open.id }, data })
-    return
-  }
-  if (open) await prisma.retention.update({ where: { id: open.id }, data: { status: 'KEPT' } })
-  await prisma.retention.create({ data: { customerId: input.customerId, status: 'OPEN', ...data } })
 }
